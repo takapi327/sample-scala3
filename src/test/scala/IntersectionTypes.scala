@@ -1,3 +1,5 @@
+package intersectionTypes
+
 trait A:
   def children: List[Int]
 
