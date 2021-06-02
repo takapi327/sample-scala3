@@ -5,7 +5,7 @@ object UnionTypes:
   case class Password(hash: String)
     
   def help(id: UserName | Password) =
-    val user = id match
+    id match
       case UserName(name) => name
       case Password(hash) => hash
   
