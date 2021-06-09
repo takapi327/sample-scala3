@@ -13,6 +13,9 @@ import Enumerations._
   println(Color.valueOf("Blue"))
   println(Color.values)
   println(Color.fromOrdinal(0))
+  println(Enumerations.Option.Some("Hello"))
+  println(Enumerations.Option.None)
+  println(Enumerations.Option.None.isDefined)
 
 def msg = "I was compiled by Scala 3. :)"
 
