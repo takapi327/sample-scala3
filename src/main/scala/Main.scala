@@ -1,6 +1,8 @@
 import UnionTypes._
 import Enumerations._
 
+import SensorReader.*
+
 @main def Main: Unit =
   println("Hello world!")
   println(msg)
@@ -29,7 +31,6 @@ import Enumerations._
     k <- 1 to 10 by 5
   do
     println(s"i = $i, j = $j, k = $k")
-
   //for
   //  i <- 1 to 10
   //  if i > 3
@@ -42,6 +43,20 @@ import Enumerations._
   //println(list2)
   test(0)
   test(10)
+  val s1 = Sensor("sensor1")
+  val s2 = Sensor("sensor2")
+  val d1 = Display()
+  val d2 = Display()
+  s1.subscribe(d1)
+  s1.subscribe(d2)
+  s2.subscribe(d1)
+  s1.changeValue(2)
+  s2.changeValue(3)
+  val pizza = Pizza(Small, Thin, Seq(Cheese))
+    .addTopping(Pepperoni)
+    .updateCrustType(Thick)
+    .price
+  println(pizza)
 
 def msg = "I was compiled by Scala 3. :)"
 
@@ -79,14 +94,100 @@ def test(i: Int) =
     case 0    => println("1")
     case 1    => println("2")
     case what => println(s"You gave me: $what" )
-/*
-def mapSubexpressions[A](e: Expr[A])(f: [B] => Expr[B] => Expr[B]): Expr[A] =
-  e match
-    case Apply(fun, arg) => Apply(f(fun), f(arg))
-    case Var(n)          => Var(n)
 
-val e0 = Apply(Var("f"), Var("a"))
-val e1 = mapSubexpressions(e0)(
-  [B] => (se: Expr[B]) => Apply(Var[B => B]("wrap"), se)
+trait SubjectObserver:
+
+  type S <: Subject
+  type O <: Observer
+
+  trait Subject { self: S =>
+    private var observers: List[O] = List()
+    def subscribe(obs: O): Unit =
+      observers = obs :: observers
+    def publish() =
+      for obs <- observers do obs.notify(this)
+  }
+
+  trait Observer {
+    def notify(sub: S): Unit
+  }
+
+object SensorReader extends SubjectObserver:
+  type S = Sensor
+  type O = Display
+
+  class Sensor(val label: String) extends Subject:
+    private var currentValue = 0.0
+    def value = currentValue
+    def changeValue(v: Double) =
+      currentValue = v
+      publish()
+
+  class Display extends Observer:
+    def notify(sub: Sensor) =
+      println(s"${sub.label} has value ${sub.value}")
+
+enum CrustSize:
+  case Small, Medium, Large
+
+enum CrustType:
+  case Thin, Thick, Regular
+
+enum Topping:
+  case Cheese, Pepperoni, BlackOlives, GreenOlives, Onions
+
+// the companion object of enumeration Topping
+object Topping:
+  // the implementation of `toppingPrice` above
+  def price(t: Topping): Double = t match
+    case Cheese | Onions => 0.5
+    case Pepperoni | BlackOlives | GreenOlives => 0.75
+
+import CrustSize.*
+import CrustType.*
+import Topping.*
+
+case class Pizza(
+  crustSize: CrustSize,
+  crustType: CrustType,
+  toppings:  Seq[Topping]
 )
-*/
+
+extension (p: Pizza)
+  def price: Double =
+    pizzaPrice(p) // implementation from above
+
+  def addTopping(t: Topping): Pizza =
+    p.copy(toppings = p.toppings :+ t)
+
+  def removeAllToppings: Pizza =
+    p.copy(toppings = Seq.empty)
+
+  def updateCrustSize(cs: CrustSize): Pizza =
+    p.copy(crustSize = cs)
+
+  def updateCrustType(ct: CrustType): Pizza =
+    p.copy(crustType = ct)
+
+object Pizza:
+  // the implementation of `pizzaPrice` from above
+  def price(p: Pizza): Double = ???
+
+
+def pizzaPrice(p: Pizza): Double = p match
+  case Pizza(crustSize, crustType, toppings) =>
+    val base  = 6.00
+    val crust = crustPrice(crustSize, crustType)
+    val tops  = toppings.map(toppingPrice).sum
+    base + crust + tops
+
+def toppingPrice(t: Topping): Double = t match
+  case Cheese | Onions => 0.5
+  case Pepperoni | BlackOlives | GreenOlives => 0.75
+
+def crustPrice(s: CrustSize, t: CrustType): Double =
+  (s, t) match
+    case (Small | Medium, _) => 0.25
+    case (Large, Thin)       => 0.50
+    case (Large, Regular)    => 0.75
+    case (Large, Thick)      => 1.00
