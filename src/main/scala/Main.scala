@@ -213,3 +213,58 @@ end MonthConversions
 
 def genericMonthConverter[A](a: A)(using monthConverter: MonthConverter[A]): String = monthConverter.convert(a)
 */
+
+trait Logarithms:
+
+  opaque type Logarithm = Int
+
+  // operations on Logarithm
+  def add(x: Logarithm, y: Logarithm): Logarithm
+  def mul(x: Logarithm, y: Logarithm): Logarithm
+
+  // functions to convert between Double and Logarithm
+  def make(d: Double): Logarithm
+  def extract(x: Logarithm): Double
+
+  // extension methods to use `add` and `mul` as "methods" on Logarithm
+  extension (x: Logarithm)
+    def toDouble: Double = extract(x)
+    def + (y: Logarithm): Logarithm = add(x, y)
+    def * (y: Logarithm): Logarithm = mul(x, y)
+
+object LogarithmsImpl extends Logarithms:
+
+  type Logarithm = Double
+
+  // operations on Logarithm
+  def add(x: Logarithm, y: Logarithm): Logarithm = make(x.toDouble + y.toDouble)
+  def mul(x: Logarithm, y: Logarithm): Logarithm = x + y
+
+  // functions to convert between Double and Logarithm
+  def make(d: Double): Logarithm = math.log(d)
+  def extract(x: Logarithm): Double = math.exp(x)
+
+import LogarithmsImpl.*
+val l: Logarithm = make(1.0)
+val d: Double = l
+
+object Logarithms2:
+  //vvvvvv this is the important difference!
+  opaque type Logarithm2 = Double
+
+  object Logarithm2:
+    def apply(d: Double): Logarithm2 = math.log(d)
+
+  extension (x: Logarithm2)
+    def toDouble: Double = math.exp(x)
+    def + (y: Logarithm2): Logarithm2 = Logarithm2(math.exp(x) + math.exp(y))
+    def * (y: Logarithm2): Logarithm2 = x + y
+
+import Logarithms2.*
+val l2 = Logarithm2(2.0)
+val l3 = Logarithm2(3.0)
+
+val test1: Double = (l2 * l3).toDouble
+val test2: Double = (l2 + l3).toDouble
+
+val d2: Double = l2.toDouble
