@@ -192,10 +192,7 @@ def crustPrice(s: CrustSize, t: CrustType): Double =
     case (Large, Regular)    => 0.75
     case (Large, Thick)      => 1.00
 
-object A:
-  class TC
-  given tc as TC
-
+/*
 object MonthConversions:
   trait MonthConverter[A]:
     def convert(a: A): String
@@ -211,7 +208,8 @@ object MonthConversions:
       s match
         case "jan" => "January"
         case "feb" => "February"
-          
+
 end MonthConversions
 
 def genericMonthConverter[A](a: A)(using monthConverter: MonthConverter[A]): String = monthConverter.convert(a)
+*/
