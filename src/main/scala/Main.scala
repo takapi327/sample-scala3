@@ -4,6 +4,7 @@ import IntersectionTypes.*
 import Ord.*
 import OrdTest.*
 import TaggedFoo.*
+import Extension.{ given, * }
 
 import SensorReader.*
 
@@ -64,6 +65,9 @@ import SensorReader.*
   println(max(List(1, 2, 3), List(4, 5, 6)))
   println(maximum(List(1, 2, 3)))
   println(summon[Ord[List[Int]]])
+  println(Circle(0, 0, 1).circumference)
+  println(4.safeMod(2))
+  println("Takapi".position('p', 2))
 
 def msg = "I was compiled by Scala 3. :)"
 
