@@ -1,6 +1,8 @@
 import UnionTypes._
 import Enumerations._
 import IntersectionTypes.*
+import Ord.*
+import OrdTest.*
 
 import SensorReader.*
 
@@ -59,6 +61,12 @@ import SensorReader.*
     .price
   println(pizza)
   println(C().children)
+  println(compare(1, 2) > 0)
+  println(testGiven(1, 2))
+  println(testGivenList(Nil, Nil))
+  println(testGivenList(List(1, 2, 3), Nil))
+  println(testGivenList(Nil, List(4, 5, 6)))
+  println(testGivenList(List(1, 2, 3), List(4, 5, 6)))
 
 def msg = "I was compiled by Scala 3. :)"
 
