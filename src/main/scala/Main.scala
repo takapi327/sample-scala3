@@ -1,5 +1,6 @@
 import UnionTypes._
 import Enumerations._
+import IntersectionTypes.*
 
 import SensorReader.*
 
@@ -57,6 +58,7 @@ import SensorReader.*
     .updateCrustType(Thick)
     .price
   println(pizza)
+  println(C().children)
 
 def msg = "I was compiled by Scala 3. :)"
 
@@ -191,28 +193,6 @@ def crustPrice(s: CrustSize, t: CrustType): Double =
     case (Large, Thin)       => 0.50
     case (Large, Regular)    => 0.75
     case (Large, Thick)      => 1.00
-
-/*
-object MonthConversions:
-  trait MonthConverter[A]:
-    def convert(a: A): String
-
-  given intMonthConverter as MonthConverter[Int]:
-    def convert(i: Int): String =
-      i match
-        case 1 =>  "January"
-        case 2 =>  "February"
-
-  given stringMonthConverter as MonthConverter[String]:
-    def convert(s: String): String =
-      s match
-        case "jan" => "January"
-        case "feb" => "February"
-
-end MonthConversions
-
-def genericMonthConverter[A](a: A)(using monthConverter: MonthConverter[A]): String = monthConverter.convert(a)
-*/
 
 trait Logarithms:
 
