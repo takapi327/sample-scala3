@@ -3,6 +3,7 @@ import Enumerations._
 import IntersectionTypes.*
 import Ord.*
 import OrdTest.*
+import TaggedFoo.*
 
 import SensorReader.*
 
@@ -34,16 +35,6 @@ import SensorReader.*
     k <- 1 to 10 by 5
   do
     println(s"i = $i, j = $j, k = $k")
-  //for
-  //  i <- 1 to 10
-  //  if i > 3
-  //  if i < 6
-  //  if i % 2 == 0
-  //do
-  //  println(i)
-
-  //println(list)
-  //println(list2)
   test(0)
   test(10)
   val s1 = Sensor("sensor1")
@@ -67,6 +58,12 @@ import SensorReader.*
   println(testGivenList(List(1, 2, 3), Nil))
   println(testGivenList(Nil, List(4, 5, 6)))
   println(testGivenList(List(1, 2, 3), List(4, 5, 6)))
+  println(summon[TaggedFoo[Int]].bool)
+  println(!summon[TaggedFoo[String]].bool)
+  println(max(3, 2))
+  println(max(List(1, 2, 3), List(4, 5, 6)))
+  println(maximum(List(1, 2, 3)))
+  println(summon[Ord[List[Int]]])
 
 def msg = "I was compiled by Scala 3. :)"
 

@@ -1,3 +1,6 @@
+
+import scala.util.NotGiven
+
 trait Ord[T]:
   def compare(x: T, y: T): Int
   extension (x: T) def < (y: T) = compare(x, y) < 0
@@ -33,3 +36,17 @@ object OrdTest:
 
   def testGivenList(x: List[Int], y: List[Int])(using ord: Ord[List[Int]]): Int =
     ord.compare(x, y)
+
+trait Tagged[A]
+
+case class TaggedFoo[A](bool: Boolean)
+object TaggedFoo:
+  given fooTagged[A](using Tagged[A]): TaggedFoo[A] = TaggedFoo(true)
+  given fooNotTagged[A](using NotGiven[Tagged[A]]): TaggedFoo[A] = TaggedFoo(false)
+  given Tagged[Int]()
+
+def max[T](x: T, y: T)(using ord: Ord[T]): T =
+  if ord.compare(x, y) < 0 then y else x
+
+def maximum[T](xs: List[T])(using Ord[T]): T =
+  xs.reduceLeft(max) // xs.reduceLeft((x, y) => max(x, y))
