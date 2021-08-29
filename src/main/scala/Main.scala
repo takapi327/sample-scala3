@@ -20,9 +20,6 @@ import SensorReader.*
   println(Color.valueOf("Blue"))
   println(Color.values)
   println(Color.fromOrdinal(0))
-  println(Enumerations.Option.Some("Hello"))
-  println(Enumerations.Option.None)
-  println(Enumerations.Option.None.isDefined)
   println(t(0))
   println((num, str, person))
   for { i <- ints } yield println(i)
@@ -68,6 +65,21 @@ import SensorReader.*
   println(Circle(0, 0, 1).circumference)
   println(4.safeMod(2))
   println("Takapi".position('p', 2))
+  println(combineAll(List(1, 2, 3)))
+  println(assertTransformation(List("a", "b"), elt => s"${elt}-1"))
+  println(boolTransformation(List("a1", "b1"), List("a", "b"), elt => s"${elt}1"))
+  println(monadTest1(List("a", "b"), elt => List(s"${elt}-1")))
+  println(monadTest2(List("a", "b"), elt => s"${elt}-1"))
+  val optStr: Option[String] = Some("a")
+  println(monadTest0[List, String]("A"))
+  println(monadTest1(optStr, elt => Some(s"${elt}-1")))
+  println(monadTest2(optStr, elt => s"${elt}-1"))
+
+  println(monadTest1(monadTest0[List, String]("A"), elt => List(s"${elt}-1")))
+  println(monadTest1(monadTest0[Option, String]("A"), elt => Some(s"${elt}-1")))
+  println(Monad[List].pure("A"))
+  println(Monad[Option].pure("A"))
+  println(Monad[Seq].pure("A"))
 
 def msg = "I was compiled by Scala 3. :)"
 
@@ -255,5 +267,6 @@ val l3 = Logarithm2(3.0)
 
 val test1: Double = (l2 * l3).toDouble
 val test2: Double = (l2 + l3).toDouble
+val test3: Logarithm2 = l2 * l3
 
-val d2: Double = l2.toDouble
+val d2: Double = test3.toDouble
