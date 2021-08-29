@@ -8,6 +8,8 @@ import Extension.{ given, * }
 
 import SensorReader.*
 
+import domain.value.Email
+
 @main def Main: Unit =
   println("Hello world!")
   println(msg)
@@ -80,6 +82,14 @@ import SensorReader.*
   println(Monad[List].pure("A"))
   println(Monad[Option].pure("A"))
   println(Monad[Seq].pure("A"))
+  println(new Box(1) == new Box(1))
+  println(new Box(1) == new Box(1L))
+  println(new Box(1) == new Box("1"))
+  println(new Box(Seq(1, 2)) == new Box(Seq(3, 4)))
+  println(Email("test@ezweb.ne.jp"))
+  println(Email("test@ezweb.ne.jp").matchRegex)
+  println(Email("test@ezweb.ne.jp").matchRegex2)
+  println(Email("テスト@ezweb.ne.jp").matchRegex2)
 
 def msg = "I was compiled by Scala 3. :)"
 
