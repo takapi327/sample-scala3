@@ -44,6 +44,7 @@ object TaggedFoo:
   given fooTagged[A](using Tagged[A]): TaggedFoo[A] = TaggedFoo(true)
   given fooNotTagged[A](using NotGiven[Tagged[A]]): TaggedFoo[A] = TaggedFoo(false)
   given Tagged[Int]()
+end TaggedFoo
 
 def max[T](x: T, y: T)(using ord: Ord[T]): T =
   if ord.compare(x, y) < 0 then y else x
