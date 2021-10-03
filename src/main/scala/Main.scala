@@ -89,7 +89,9 @@ import domain.value.Email
   println(Email("test@ezweb.ne.jp"))
   println(Email("test@ezweb.ne.jp").matchRegex)
   println(Email("test@ezweb.ne.jp").matchRegex2)
-  println(Email("テスト@ezweb.ne.jp").matchRegex2)
+  //println(Email("テスト@ezweb.ne.jp").matchRegex2)
+  println(Email("test@ezweb.ne.jp").refine)
+  println(Email("テスト@ezweb.ne.jp").refine)
 
 def msg = "I was compiled by Scala 3. :)"
 
