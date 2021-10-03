@@ -2,6 +2,8 @@ package domain.value
 
 import scala.util.matching.Regex
 
+import Refine.*
+
 object Email:
 
   lazy val emailPatturn: Regex = """[\w\-._]+@[\w\-._]+\.[A-Za-z]+""".r

@@ -93,6 +93,15 @@ import domain.value.Email
   println(Email("test@ezweb.ne.jp").refine)
   println(Email("テスト@ezweb.ne.jp").refine)
 
+  println(p1 == p2)
+  println(pBook == aBook)
+  println(pBook == aBook)
+  println(s)
+  println(s1)
+  println(s2)
+  println(s3)
+  println(s4)
+ 
 def msg = "I was compiled by Scala 3. :)"
 
 def foo[A](xs: List[A]): List[A] = xs.reverse
