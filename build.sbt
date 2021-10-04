@@ -27,6 +27,7 @@ lazy val library = (project in file("modules/library-rds"))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core"   % catsVersion,
       "org.tpolecat"  %% "doobie-core" % doobieVersion,
+      "co.fs2"        %% "fs2-core"    % "3.1.3"
     )
   )
 
