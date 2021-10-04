@@ -1,7 +1,4 @@
 
-import cats.implicits.*
-import cats.effect.unsafe.implicits.global
-
 import UnionTypes._
 import Enumerations._
 import IntersectionTypes.*
@@ -13,11 +10,8 @@ import Extension.{ given, * }
 import SensorReader.*
 
 import domain.value.Email
-import library.rds.*
 
 @main def Main: Unit =
-  println(io.unsafeRunSync())
-  /*
   println("Hello world!")
   println(msg)
   println(leafElem(Seq(1, 3, 4)))
@@ -108,8 +102,7 @@ import library.rds.*
   println(s2)
   println(s3)
   println(s4)
-   */
- 
+
 def msg = "I was compiled by Scala 3. :)"
 
 def foo[A](xs: List[A]): List[A] = xs.reverse

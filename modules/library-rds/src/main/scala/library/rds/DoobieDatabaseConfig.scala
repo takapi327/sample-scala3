@@ -19,5 +19,7 @@ val xa = Transactor.fromDriverManager[IO](
 )
 
 val program1 = 42.pure[ConnectionIO]
+val program2 = sql"select 42".query[Int].unique
 
-val io = program1.transact(xa)
+val io  = program1.transact(xa)
+val io2 = program2.transact(xa)
