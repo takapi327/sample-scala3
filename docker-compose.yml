@@ -1,0 +1,14 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:5.7
+    platform: linux/amd64 # Setting for M1 mac
+    environment:
+      MYSQL_USER: 'takapi327'
+      MYSQL_PASSWORD: 'takapi327'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - 13306:3306
+    volumes:
+      - ./database/mysql_data:/docker-entrypoint-initdb.d
+      - ./database/my.cnf:/etc/mysql/conf.d/my.cnf
