@@ -23,6 +23,8 @@ val xa = Transactor.fromDriverManager[IO](
 )
 val y = xa.yolo
 
+case class Country(code: String, name: String, pop: Int, gnp: Option[Double])
+
 val program1 = 42.pure[ConnectionIO]
 val program2 = sql"select 42".query[Int].unique
 val program3: ConnectionIO[(Int, Double)] =
@@ -33,10 +35,11 @@ val program3: ConnectionIO[(Int, Double)] =
 val program4 = sql"select name from country".query[String].to[List]
 val program5 = sql"select name from country".query[String].stream.take(5).compile.toList
 val program6 = sql"select name from country".query[String].stream.take(5)
+val program7 = sql"select code, name, population, gnp from country".query[(String, String, Int, Option[Double])].stream.take(5)
+val program8 = sql"select code, name, population, gnp from country".query[Country].stream.take(5)
 
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)
 val io3 = program3.transact(xa)
 val io4 = program4.transact(xa)
 val io5 = program5.transact(xa)
-//val io6 = program6.quick

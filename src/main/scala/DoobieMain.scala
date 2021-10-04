@@ -12,3 +12,5 @@ import y.*
   io4.unsafeRunSync().take(5).foreach(println)
   io5.unsafeRunSync().foreach(println)
   println(program6.quick.unsafeRunSync())
+  println(program7.quick.unsafeRunSync())
+  println(program8.quick.unsafeRunSync())
