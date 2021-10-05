@@ -40,6 +40,11 @@ val program6 = sql"select name from country".query[String].stream.take(5)
 val program7 = sql"select code, name, population, gnp from country".query[(String, String, Int, Option[Double])].stream.take(5)
 val program8 = sql"select code, name, population, gnp from country".query[Country].stream.take(5)
 val program9 = sql"select code, name, population, gnp from country".query[(Code, Country2)].stream.take(5)
+val program10: Stream[IO, Country2] =
+  sql"select name, population, gnp from country"
+    .query[Country2] // Query0[Country2]
+    .stream          // Stream[ConnectionIO, Country2]
+    .transact(xa)    // Stream[IO, Country2]
 
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)

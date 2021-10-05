@@ -15,3 +15,5 @@ import y.*
   println(program7.quick.unsafeRunSync())
   println(program8.quick.unsafeRunSync())
   println(program9.quick.unsafeRunSync())
+  println(program9.compile.toList.map(_.toMap).quick.unsafeRunSync())
+  program10.take(5).compile.toVector.unsafeRunSync().foreach(println)
