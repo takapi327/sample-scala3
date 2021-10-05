@@ -14,3 +14,4 @@ import y.*
   println(program6.quick.unsafeRunSync())
   println(program7.quick.unsafeRunSync())
   println(program8.quick.unsafeRunSync())
+  println(program9.quick.unsafeRunSync())
