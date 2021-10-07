@@ -46,6 +46,30 @@ val program10: Stream[IO, Country2] =
     .stream          // Stream[ConnectionIO, Country2]
     .transact(xa)    // Stream[IO, Country2]
 
+def biggerThan(minPop: Int) =
+  sql"""
+    select code, name, population, gnp
+    from country
+    where population > $minPop
+  """.query[Country]
+
+def populationIn(range: Range) =
+  sql"""
+    select code, name, population, gnp
+    from country
+    where population > ${range.min}
+    and   population < ${range.max}
+  """.query[Country]
+
+def populationIn(range: Range, codes: NonEmptyList[String]) =
+  val q = fr"""
+    select code, name, population, gnp
+    from country
+    where population > ${range.min}
+    and   population < ${range.max}
+    and   """ ++ Fragments.in(fr"code", codes) // code IN (...)
+  q.query[Country]
+
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)
 val io3 = program3.transact(xa)

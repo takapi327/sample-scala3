@@ -1,4 +1,5 @@
 
+import cats.data.*
 import cats.implicits.*
 import cats.effect.unsafe.implicits.global
 
@@ -17,3 +18,6 @@ import y.*
   println(program9.quick.unsafeRunSync())
   println(program9.compile.toList.map(_.toMap).quick.unsafeRunSync())
   program10.take(5).compile.toVector.unsafeRunSync().foreach(println)
+  println(biggerThan(150000000).quick.unsafeRunSync())
+  println(populationIn(150000000 to 200000000).quick.unsafeRunSync())
+  println(populationIn(100000000 to 300000000, NonEmptyList.of("USA", "BRA", "PAK", "GBR")).quick.unsafeRunSync())
