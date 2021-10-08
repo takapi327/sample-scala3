@@ -70,6 +70,13 @@ def populationIn(range: Range, codes: NonEmptyList[String]) =
     and   """ ++ Fragments.in(fr"code", codes) // code IN (...)
   q.query[Country]
 
+def biggerThan(minPop: Short) =
+  sql"""
+    select code, name, population, gnp, indepyear
+    from country
+    where population > $minPop
+  """.query[Country]
+  
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)
 val io3 = program3.transact(xa)

@@ -21,3 +21,5 @@ import y.*
   println(biggerThan(150000000).quick.unsafeRunSync())
   println(populationIn(150000000 to 200000000).quick.unsafeRunSync())
   println(populationIn(100000000 to 300000000, NonEmptyList.of("USA", "BRA", "PAK", "GBR")).quick.unsafeRunSync())
+  println(biggerThan(0).check.unsafeRunSync())
+  println(biggerThan(0).checkOutput.unsafeRunSync())
