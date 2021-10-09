@@ -110,3 +110,18 @@ def safeInsert(s: String): ConnectionIO[Either[String, Person]] =
   insert2(s, None).attemptSomeSqlState {
     case _ => "Oops!"
   }
+
+def byName(pat: String) =
+  sql"select name, code from country where name like $pat"
+    .queryWithLogHandler[(String, String)](LogHandler.jdkLogHandler)
+    .to[List]
+    .transact(xa)
+
+import doobie.util.log.LogHandler.jdkLogHandler
+given han: LogHandler = LogHandler.jdkLogHandler
+
+def byName2(pat: String) =
+  sql"select name, code from country where name like $pat"
+    .query[(String, String)] // handler will be picked up here
+    .to[List]
+    .transact(xa)

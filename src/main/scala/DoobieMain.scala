@@ -37,3 +37,5 @@ import y.*
       println(e.getMessage)
       println(e.getSQLState)
   safeInsert("Alice").quick.unsafeRunSync()
+  byName("N%").unsafeRunSync()
+  byName2("U%").unsafeRunSync()
