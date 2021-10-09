@@ -23,6 +23,8 @@ val xa = Transactor.fromDriverManager[IO](
 )
 val y = xa.yolo
 
+given han: LogHandler = DoobieLogHandler.trackingLogHandler
+
 case class Country(code: String, name: String, pop: Int, gnp: Option[Double])
 case class Code(code: String)
 case class Country2(name: String, pop: Int, gnp: Option[Double])
@@ -113,15 +115,13 @@ def safeInsert(s: String): ConnectionIO[Either[String, Person]] =
 
 def byName(pat: String) =
   sql"select name, code from country where name like $pat"
-    .queryWithLogHandler[(String, String)](LogHandler.jdkLogHandler)
+    .queryWithLogHandler[(String, String)](DoobieLogHandler.trackingLogHandler)
     .to[List]
     .transact(xa)
-
-import doobie.util.log.LogHandler.jdkLogHandler
-given han: LogHandler = LogHandler.jdkLogHandler
 
 def byName2(pat: String) =
   sql"select name, code from country where name like $pat"
     .query[(String, String)] // handler will be picked up here
     .to[List]
     .transact(xa)
+
