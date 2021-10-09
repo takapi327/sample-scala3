@@ -76,7 +76,10 @@ def biggerThan2(minPop: Short) =
     from country
     where population > $minPop
   """.query[Country]
-  
+
+def insert1(name: String, age: Option[Short]): Update0 =
+  sql"insert into person (name, age) values ($name, $age)".update
+
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)
 val io3 = program3.transact(xa)

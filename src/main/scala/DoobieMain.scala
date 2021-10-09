@@ -23,3 +23,4 @@ import y.*
   println(populationIn(1 to 3, NonEmptyList.of("USA", "BRA", "PAK", "GBR")).quick.unsafeRunSync())
   println(biggerThan2(0).check.unsafeRunSync())
   println(biggerThan2(0).checkOutput.unsafeRunSync())
+  insert1("Bob", None).quick.unsafeRunSync()
