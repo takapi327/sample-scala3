@@ -26,6 +26,7 @@ val y = xa.yolo
 case class Country(code: String, name: String, pop: Int, gnp: Option[Double])
 case class Code(code: String)
 case class Country2(name: String, pop: Int, gnp: Option[Double])
+case class Person(id: Long, name: String, age: Option[Short])
 
 val program1 = 42.pure[ConnectionIO]
 val program2 = sql"select 42".query[Int].unique
@@ -45,6 +46,8 @@ val program10: Stream[IO, Country2] =
     .query[Country2] // Query0[Country2]
     .stream          // Stream[ConnectionIO, Country2]
     .transact(xa)    // Stream[IO, Country2]
+val program11 = sql"select id, name, age from person".query[Person]
+val program12 = sql"update person set age = 15 where name = 'Alice'".update
 
 def biggerThan(minPop: Int) =
   sql"""
@@ -80,8 +83,30 @@ def biggerThan2(minPop: Short) =
 def insert1(name: String, age: Option[Short]): Update0 =
   sql"insert into person (name, age) values ($name, $age)".update
 
+def insert2(name: String, age: Option[Short]): ConnectionIO[Person] =
+  for
+    _  <- sql"insert into person (name, age) values ($name, $age)".update.run
+    id <- sql"select last_insert_id()".query[Long].unique
+    p  <- sql"select id, name, age from person where id = $id".query[Person].unique
+  yield p
+
 val io  = program1.transact(xa)
 val io2 = program2.transact(xa)
 val io3 = program3.transact(xa)
 val io4 = program4.transact(xa)
 val io5 = program5.transact(xa)
+
+val a = 1
+val b = "foo"
+
+type PersonInfo = (String, Option[Short])
+
+def insertMany(ps: List[PersonInfo]): ConnectionIO[Int] =
+  val sql = "insert into person (name, age) values (?, ?)"
+  Update[PersonInfo](sql).updateMany(ps)
+
+
+def safeInsert(s: String): ConnectionIO[Either[String, Person]] =
+  insert2(s, None).attemptSomeSqlState {
+    case _ => "Oops!"
+  }

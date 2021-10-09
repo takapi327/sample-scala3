@@ -23,4 +23,17 @@ import y.*
   println(populationIn(1 to 3, NonEmptyList.of("USA", "BRA", "PAK", "GBR")).quick.unsafeRunSync())
   println(biggerThan2(0).check.unsafeRunSync())
   println(biggerThan2(0).checkOutput.unsafeRunSync())
-  insert1("Bob", None).quick.unsafeRunSync()
+  //insert1("Alice", Some(12)).quick.unsafeRunSync()
+  //insert1("Bob", None).quick.unsafeRunSync()
+  //program12.quick.unsafeRunSync()
+  //println(program11.quick.unsafeRunSync())
+  //insert2("Jimmy", Some(42)).quick.unsafeRunSync()
+  val data = List[PersonInfo](("Alice", Some(12)), ("Jimmy", Some(42)), ("Frank", Some(12)), ("Daddy", None))
+  //insertMany(data).quick.unsafeRunSync()
+  try
+    insert1("Alice", Some(12)).quick.unsafeRunSync()
+  catch
+    case e: java.sql.SQLException =>
+      println(e.getMessage)
+      println(e.getSQLState)
+  safeInsert("Alice").quick.unsafeRunSync()
