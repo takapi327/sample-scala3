@@ -1,4 +1,4 @@
-package library.rds
+package library.rdb
 
 import doobie.util.log.{ LogHandler, Success, ProcessingFailure, ExecFailure }
 

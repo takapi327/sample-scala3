@@ -1,4 +1,4 @@
-package library.rds
+package library.rdb
 
 import doobie.*
 import doobie.implicits.*
@@ -23,7 +23,7 @@ val xa = Transactor.fromDriverManager[IO](
 )
 val y = xa.yolo
 
-given han: LogHandler = DoobieLogHandler.trackingLogHandler
+given logHandler: LogHandler = DoobieLogHandler.trackingLogHandler
 
 case class Country(code: String, name: String, pop: Int, gnp: Option[Double])
 case class Code(code: String)
