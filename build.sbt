@@ -17,10 +17,10 @@ lazy val root = (project in file("."))
       "org.typelevel"  %% "cats-core"            % catsVersion
     )
   )
-  .aggregate(library)
-  .dependsOn(library)
+  .aggregate(libraryRds, libraryUtil)
+  .dependsOn(libraryRds, libraryUtil)
 
-lazy val library = (project in file("modules/library-rds"))
+lazy val libraryRds = (project in file("modules/library-rds"))
   .settings(
     name := "library-rds",
     commonSettings,
@@ -30,8 +30,26 @@ lazy val library = (project in file("modules/library-rds"))
       "co.fs2"        %% "fs2-core"    % "3.1.3"
     )
   )
+  .aggregate(libraryUtil)
+  .dependsOn(libraryUtil)
+
+lazy val libraryUtil = (project in file("modules/library-util"))
+  .settings(
+    name := "library-util",
+    commonSettings,
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-log4j12" % "1.7.32"
+    )
+  )
 
 lazy val commonSettings = Seq(
+  run / fork := true,
+
+  javaOptions ++= Seq(
+    "-Dconfig.file=conf/env.dev/application.conf",
+    "-Dlogger.file=conf/env.dev/logback.xml"
+  ),
+
   scalacOptions ++= Seq(
     "-Xfatal-warnings",
     "-deprecation",
