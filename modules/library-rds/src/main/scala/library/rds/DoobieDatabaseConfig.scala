@@ -70,7 +70,7 @@ def populationIn(range: Range, codes: NonEmptyList[String]) =
     and   """ ++ Fragments.in(fr"code", codes) // code IN (...)
   q.query[Country]
 
-def biggerThan(minPop: Short) =
+def biggerThan2(minPop: Short) =
   sql"""
     select code, name, population, gnp, indepyear
     from country

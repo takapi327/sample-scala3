@@ -12,7 +12,7 @@ CREATE TABLE country (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 LOCK TABLES `country` WRITE;
-INSERT INTO `country` VALUES ('1', 'Afghanistan', 1, 1.1),
-                             ('2', 'Netherlands', 2, 1.2),
-                             ('3', 'Netherlands Antilles', 3, 1.3),
-                             ('4', 'Albania', 4, 1.4);
+INSERT INTO `country` VALUES ('USA', 'Afghanistan', 1, 1.1),
+                             ('BRA', 'Netherlands', 2, 1.2),
+                             ('PAK', 'Netherlands Antilles', 3, 1.3),
+                             ('GBR', 'Albania', 4, 1.4);
