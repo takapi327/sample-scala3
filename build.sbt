@@ -14,7 +14,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "mysql"          %  "mysql-connector-java" % "8.0.26",
       "com.novocode"   %  "junit-interface"      % "0.11" % "test",
-      "org.typelevel"  %% "cats-core"            % catsVersion
+      "org.tpolecat"   %% "doobie-core"          % doobieVersion,
+      "org.typelevel"  %% "cats-core"            % catsVersion,
+      "co.fs2"         %% "fs2-core"             % "3.1.3"
     )
   )
   .aggregate(libraryRds, libraryUtil)
@@ -41,7 +43,7 @@ lazy val libraryUtil = (project in file("modules/library-util"))
     commonSettings,
     libraryDependencies ++= Seq(
       "com.typesafe" % "config"        % "1.4.1",
-      "org.slf4j"    % "slf4j-log4j12" % "1.7.32"
+      "org.slf4j"    % "slf4j-log4j12" % "2.0.0-alpha1"
     )
   )
 
