@@ -4,7 +4,7 @@ import cats.implicits.*
 import cats.effect.unsafe.implicits.global
 
 import library.rdb.*
-import library.util.TrackingLogging
+import library.util.Configuration
 import y.*
 
 @main def DoobieMain: Unit =

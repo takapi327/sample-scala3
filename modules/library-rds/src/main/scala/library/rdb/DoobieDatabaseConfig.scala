@@ -1,5 +1,7 @@
 package library.rdb
 
+import scala.concurrent.ExecutionContext
+
 import doobie.*
 import doobie.implicits.*
 import doobie.util.ExecutionContexts
@@ -8,18 +10,17 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.implicits.*
+import cats.effect.unsafe.implicits.global
 
 import fs2.Stream
 
-import scala.concurrent.ExecutionContext
-
-import cats.effect.unsafe.implicits.global
+import library.util.Configuration
 
 val xa = Transactor.fromDriverManager[IO](
-  "com.mysql.cj.jdbc.Driver",
-  "jdbc:mysql://127.0.0.1:13306/sample_doobie?useSSL=false",
-  "takapi327",
-  "takapi327"
+  Configuration.config.getString("library.rdb.driver"),
+  Configuration.config.getString("library.rdb.url"),
+  Configuration.config.getString("library.rdb.user"),
+  Configuration.config.getString("library.rdb.password")
 )
 val y = xa.yolo
 
