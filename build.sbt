@@ -27,7 +27,8 @@ lazy val libraryRds = (project in file("modules/library-rds"))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core"   % catsVersion,
       "org.tpolecat"  %% "doobie-core" % doobieVersion,
-      "co.fs2"        %% "fs2-core"    % "3.1.3"
+      "co.fs2"        %% "fs2-core"    % "3.1.3",
+      "com.zaxxer"    %  "HikariCP"    % "5.0.0"
     )
   )
   .aggregate(libraryUtil)
