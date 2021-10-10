@@ -1,13 +1,22 @@
 
+import scala.concurrent.ExecutionContext
+
 import cats.data.*
 import cats.implicits.*
 import cats.effect.unsafe.implicits.global
 
 import library.rdb.*
 import library.util.Configuration
-import y.*
+
+import interfaceAdapter.gateway.repository.PersonRepository
 
 @main def DoobieMain: Unit =
+  given ec: ExecutionContext = ExecutionContext.global
+
+  val personRepository = new PersonRepository()
+
+  println(personRepository.byName("N%"))
+  /*
   println(io.unsafeRunSync())
   println(io2.unsafeRunSync())
   println(io3.unsafeRunSync())
@@ -40,3 +49,4 @@ import y.*
   safeInsert("Alice").quick.unsafeRunSync()
   byName("N%").unsafeRunSync()
   byName2("U%").unsafeRunSync()
+  */
