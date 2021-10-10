@@ -3,7 +3,6 @@ package library.util
 import org.slf4j.MarkerFactory
 import org.slf4j.LoggerFactory
 import org.slf4j.spi.LocationAwareLogger
-import org.apache.log4j.BasicConfigurator
 
 import java.util.UUID
 
@@ -13,9 +12,6 @@ trait TrackingLogging:
 
 import LocationAwareLogger._
 protected case class TrackingLogger(logger: LocationAwareLogger):
-
-  // Set up a simple configuration that logs on the console.
-  BasicConfigurator.configure()
 
   /**
    * Message only log
