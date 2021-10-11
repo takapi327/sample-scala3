@@ -1,10 +1,9 @@
 package library.util
 
-import org.slf4j.MarkerFactory
-import org.slf4j.LoggerFactory
-import org.slf4j.spi.LocationAwareLogger
-
 import java.util.UUID
+
+import org.slf4j.{ LoggerFactory, MarkerFactory }
+import org.slf4j.spi.LocationAwareLogger
 
 trait TrackingLogging:
   val trackingLogger: TrackingLogger =
