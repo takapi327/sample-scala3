@@ -9,7 +9,20 @@
     </encoder>
   </appender>
 
+  <!-- HikariCP出力用設定 -->
+  <appender name="HIKARI-CP" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) [%thread] %msg %n
+      </pattern>
+    </encoder>
+  </appender>
+
   <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
+
+  <logger name="com.zaxxer.hikari.HikariConfig" level="INFO" additivity="false">
+    <appender-ref ref="HIKARI-CP" />
+  </logger>
 </configuration>
