@@ -53,7 +53,7 @@ lazy val commonSettings = Seq(
 
   javaOptions ++= Seq(
     "-Dconfig.file=conf/env.dev/application.conf",
-    "-Dlogger.file=conf/env.dev/logback.xml"
+    "-Dlogback.configurationFile=conf/env.dev/logback.xml"
   ),
 
   scalacOptions ++= Seq(
