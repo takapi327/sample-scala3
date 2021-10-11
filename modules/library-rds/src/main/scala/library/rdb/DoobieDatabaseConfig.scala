@@ -21,6 +21,7 @@ trait DoobieDatabaseConfig(using ec: ExecutionContext):
   hikariConfig.setJdbcUrl(jdbcUrl)
   hikariConfig.setUsername(user)
   hikariConfig.setPassword(password)
+  hikariConfig.addDataSourceProperty("useSSL", false)
 
   protected val transactor: Resource[IO, HikariTransactor[IO]] =
     HikariTransactor.fromHikariConfig(
