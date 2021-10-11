@@ -8,8 +8,6 @@ import cats.effect.*
 
 import com.zaxxer.hikari.HikariConfig
 
-import org.apache.log4j.BasicConfigurator
-
 import library.util.Configuration
 
 trait DoobieDatabaseConfig(using ec: ExecutionContext):
@@ -17,8 +15,6 @@ trait DoobieDatabaseConfig(using ec: ExecutionContext):
   private lazy val jdbcUrl:    String = Configuration.config.getString("library.rdb.url")
   private lazy val user:       String = Configuration.config.getString("library.rdb.user")
   private lazy val password:   String = Configuration.config.getString("library.rdb.password")
-
-  BasicConfigurator.configure()
 
   private val hikariConfig = new HikariConfig()
   hikariConfig.setDriverClassName(driverName)

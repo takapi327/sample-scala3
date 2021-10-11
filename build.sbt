@@ -42,8 +42,9 @@ lazy val libraryUtil = (project in file("modules/library-util"))
     name := "library-util",
     commonSettings,
     libraryDependencies ++= Seq(
-      "com.typesafe" % "config"        % "1.4.1",
-      "org.slf4j"    % "slf4j-log4j12" % "2.0.0-alpha1"
+      "com.typesafe"   % "config"          % "1.4.1",
+      "org.slf4j"      % "slf4j-api"       % "2.0.0-alpha1",
+      "ch.qos.logback" % "logback-classic" % "1.3.0-alpha4"
     )
   )
 
