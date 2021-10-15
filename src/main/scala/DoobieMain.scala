@@ -18,6 +18,7 @@ import interfaceAdapter.gateway.repository.PersonRepository
   println(personRepository.byName("N%"))
   import scala.concurrent.Await
   import scala.concurrent.duration._
+  Await.ready(personRepository.byName("N%").map(v => println(v)), 5.seconds)
   Await.ready(personRepository.byNameToFuture("U%").map(v => println(v)), 5.seconds)
   /*
   println(io.unsafeRunSync())

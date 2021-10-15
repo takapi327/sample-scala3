@@ -24,14 +24,17 @@ class PersonRepository (
     val sql = "insert into person (name, age) values (?, ?)"
     Update[PersonInfo](sql).updateMany(ps)
 
-  def byName(pat: String): Either[Throwable, List[(String, String)]] =
+  def byName(pat: String): Future[Either[Throwable, List[(String, String)]]] =
     transactor.use {
       sql"select name, code from country where name like $pat"
         .query[(String, String)]
-        .to[List]
+        .stream
+        .compile
+        .toList
+        //.to[List]
         .attempt
         .transact[IO]
-    }.unsafeRunSync()
+    }.unsafeToFuture()
 
   def byNameToFuture(pat: String): Future[List[(String, String)]] =
     transactor.use {
