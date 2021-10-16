@@ -22,7 +22,7 @@
     <appender-ref ref="STDOUT" />
   </root>
 
-  <logger name="com.zaxxer.hikari.HikariConfig" level="INFO" additivity="false">
+  <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
     <appender-ref ref="HIKARI-CP" />
   </logger>
 </configuration>
