@@ -10,11 +10,13 @@ import com.zaxxer.hikari.HikariConfig
 
 import library.util.Configuration
 
-trait DoobieDatabaseConfig(using ec: ExecutionContext)
-  extends HikariConfigBuilder:
+trait DoobieDatabaseConfig[M[_]: Async](
+  using ec: ExecutionContext
+) extends HikariConfigBuilder:
 
-  protected val transactor: Resource[IO, HikariTransactor[IO]] =
-    HikariTransactor.fromHikariConfig(
-      hikariConfig = hikariConfig,
-      connectEC    = ec
-    )
+  protected val transactor: Resource[M, HikariTransactor[M]] =
+    for
+      hikariConfig <- Resource.eval(buildConfig())
+      transactor   <- HikariTransactor.fromHikariConfig[M](hikariConfig, ec)
+    yield
+      transactor
