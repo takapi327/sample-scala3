@@ -8,18 +8,33 @@ import cats.effect.unsafe.implicits.global
 import library.rdb.*
 import library.util.Configuration
 
-import interfaceAdapter.gateway.repository.PersonRepository
+import interfaceAdapter.gateway.repository.*
 
 @main def DoobieMain: Unit =
   given ec: ExecutionContext = ExecutionContext.global
 
-  val personRepository = new PersonRepository()
+  val countryRepository = new CountryRepository()
+  val personRepository  = new PersonRepository()
 
+  val test1 = personRepository.byName("N%")
+  val test2 = personRepository.byName2("N%")
+  val test3 = personRepository.run()
+  val test4 = countryRepository.biggerThan(2)
+  val test5 = countryRepository.populationIn(1 to 3)
+  println(test1)
+  println(test2)
+  println(test3)
+  println(test4)
+  println(test5)
+  println(countryRepository.biggerThan(2, 1))
+  /*
   println(personRepository.byName("N%"))
-  import scala.concurrent.Await
-  import scala.concurrent.duration._
-  Await.ready(personRepository.byName("N%").map(v => println(v)), 5.seconds)
-  Await.ready(personRepository.byNameToFuture("U%").map(v => println(v)), 5.seconds)
+  println(personRepository.byName2("N%"))
+  println(personRepository.run())
+
+  println(countryRepository.biggerThan(2))
+  println(countryRepository.populationIn(1 to 3))
+   */
   /*
   println(io.unsafeRunSync())
   println(io2.unsafeRunSync())
