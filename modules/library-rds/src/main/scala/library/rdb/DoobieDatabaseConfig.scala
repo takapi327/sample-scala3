@@ -14,7 +14,7 @@ trait DoobieDatabaseConfig[M[_]: Async](
   using ec: ExecutionContext
 ) extends HikariConfigBuilder:
 
-  protected val transactor: Resource[M, HikariTransactor[M]] =
+  val transactor: Resource[M, HikariTransactor[M]] =
     for
       hikariConfig <- Resource.eval(buildConfig())
       transactor   <- HikariTransactor.fromHikariConfig[M](hikariConfig, ec)

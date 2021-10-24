@@ -5,10 +5,7 @@ import cats.data.*
 import cats.implicits.*
 import cats.effect.unsafe.implicits.global
 
-import com.google.inject.{ Module => GuiceModule }
-
 import library.rdb.*
-import library.util.Configuration
 
 import interfaceAdapter.gateway.repository.*
 
@@ -18,6 +15,9 @@ import interfaceAdapter.gateway.repository.*
   val countryRepository = new CountryRepository()
   val personRepository  = new PersonRepository()
 
+  object test extends MixinRepository
+
+  println(test)
   /*
   val test1 = personRepository.byName("N%")
   val test2 = personRepository.byName2("N%")
@@ -31,32 +31,6 @@ import interfaceAdapter.gateway.repository.*
   println(test5)
   println(countryRepository.biggerThan(2, 1))
    */
-
-  import java.lang.reflect.Constructor
-
-  val config = Configuration()
-
-  val module = config.get[String]("library.rdb.module")
-
-  val classLoader = ClassLoader.getSystemClassLoader()
-  val clazz = classLoader.loadClass(module).asInstanceOf[Class[Any]]
-  println(clazz)
-  println(classOf[CountryRepository].isAssignableFrom(clazz))
-  println(classOf[PersonRepository].isAssignableFrom(clazz))
-  //val bindingClass: Class[_ <: PersonRepository] = clazz.asSubclass(classOf[PersonRepository])
-  //val test: PersonRepository = classLoader.loadClass(module).asInstanceOf[Class[PersonRepository]]
-  println(classLoader.loadClass(module).asInstanceOf[Class[PersonRepository]])
-  //println(clazz.getConstructor(clazz.getClass))
-  //println(clazz.getConstructor())
-  clazz match {
-    case module: GuiceModule => println(module)
-  }
-  classOf[CountryRepository].isAssignableFrom(clazz) match
-    case true  => println("OK")
-    case false => println("NO")
-
-  def constructModule(loadModuleClass: () => Class[T]): T =
-    val moduleClass = loadModuleClass()
   /*
   println(personRepository.byName("N%"))
   println(personRepository.byName2("N%"))
