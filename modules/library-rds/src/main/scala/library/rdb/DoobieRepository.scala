@@ -4,13 +4,5 @@ import cats.effect.*
 
 import doobie.LogHandler
 
-trait DoobieRepository[M[_]: Async] extends DoobieDatabaseConfig[M]:
+trait DoobieRepository[M[_]: Async] extends DoobieDatabaseConfig[M], RepositoryClient:
   given LogHandler = DoobieLogHandler.trackingLogHandler
-
-import scala.concurrent.ExecutionContext
-import com.google.inject.AbstractModule
-
-given ec: ExecutionContext = ExecutionContext.global
-
-case class test() extends DoobieRepository[IO]
-case class hoge() extends DoobieRepository[IO]
