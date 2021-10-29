@@ -31,6 +31,7 @@ trait MixinRepository:
   //constructor.setAccessible(true)
   val instance = constructor.newInstance()
   println(classType)
+  /*
   val lib: DoobieRepository[cats.effect.IO] = instance match {
     case a: hoge  => hoge()
     case a: test  => test()
@@ -52,6 +53,7 @@ trait MixinRepository:
         .transact[IO]
     }.unsafeRunSync()
   println(filterbyName("N%"))
+   */
 
   //println(c.getField("MODULE$").get(null).asInstanceOf[Function0[test]])
   //println(hoge)

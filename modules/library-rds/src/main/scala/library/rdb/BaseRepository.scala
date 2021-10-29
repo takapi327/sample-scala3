@@ -1,24 +1,61 @@
 package library.rdb
 
 import cats.effect.*
+import com.google.inject.*
+import library.util.Configuration
 
-trait BaseRepository[+A]
+import scala.concurrent.ExecutionContext
 
-object BaseRepository:
+trait BaseRepository:
 
-  abstract case class DoobieRepositoryImpl[M[_]: Async, T]()
-    extends DoobieRepository[M], BaseRepository[T]
+  private lazy val config        = Configuration()
+  private lazy val libraryModule = config.get[String]("library.rdb.module")
 
+  private val classType: Class[_] = Class.forName(libraryModule)
+  private val constructor = classType.getDeclaredConstructor()
+  private val instance    = constructor.newInstance()
 
-import com.google.inject.AbstractModule
+  private def createClient[T <: RepositoryClient](module: AbstractModule, classT: Class[T]): RepositoryClient =
+    val injector: Injector = Guice.createInjector(module)
+    injector.getInstance(classT)
+
+  val service: RepositoryClient = instance match
+    case doobie: DoobieModule => createClient(doobie, classOf[RepositoryClient])
+    case _ => throw new IllegalArgumentException
 
 class DoobieModule extends AbstractModule:
   override def configure(): Unit =
-    ()
+    bind(classOf[RepositoryClient]).to(classOf[DoobieRepositoryImpl[IO]])
+
+import doobie.*
+import doobie.hikari.HikariTransactor
+
+import cats.effect.Resource
 
 trait RepositoryClient:
 
-  def connectDatabase(): Unit = ()
+  type M[_] <: Async
+
+  val ConnectDB: Resource[M, HikariTransactor[M]]
+
+import doobie.implicits.*
+
+import cats.effect.IO.asyncForIO
+import cats.effect.unsafe.implicits.global
+class Test extends BaseRepository:
+  def filterByName(pat: String): List[(String, String)] =
+    service.ConnectDB().use {
+      sql"select name, code from country where name like $pat"
+        .query[(String, String)]
+        .to[List]
+        .transact[IO]
+    }.unsafeRunSync()
+
+class DoobieRepositoryImpl[M[_]: Async](
+  using ec: ExecutionContext
+) extends DoobieRepository[M], RepositoryClient:
+
+  val ConnectDB(): Resource[M, HikariTransactor[M]] = transactor
 
 /*
 import doobie.implicits.*

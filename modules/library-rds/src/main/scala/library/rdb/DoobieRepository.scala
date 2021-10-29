@@ -4,5 +4,5 @@ import cats.effect.*
 
 import doobie.LogHandler
 
-trait DoobieRepository[M[_]: Async] extends DoobieDatabaseConfig[M], RepositoryClient:
+trait DoobieRepository[M[_]: Async] extends DoobieDatabaseConfig[M]:
   given LogHandler = DoobieLogHandler.trackingLogHandler
