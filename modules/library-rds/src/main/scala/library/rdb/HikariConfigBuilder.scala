@@ -22,6 +22,4 @@ trait HikariConfigBuilder:
   hikariConfig.addDataSourceProperty("useSSL", false)
 
   def buildConfig[F[_]: Sync](): F[HikariConfig] =
-    Sync[F].delay {
-      hikariConfig
-    }
+    Sync[F].delay { hikariConfig }
