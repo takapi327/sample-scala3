@@ -3,12 +3,15 @@ package library.rdb
 import java.lang.reflect.Constructor
 
 import scala.reflect.ClassTag
+import scala.concurrent.ExecutionContext
 
 import com.google.inject.{ Module => GuiceModule }
 
 import library.util.Configuration
 
-trait MixinRepository:
+trait MixinRepository(
+  using ec: ExecutionContext
+):
   lazy val config = Configuration()
 
   lazy val libraryModule = config.get[String]("library.rdb.module")
