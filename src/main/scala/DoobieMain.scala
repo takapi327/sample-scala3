@@ -15,9 +15,6 @@ import interfaceAdapter.gateway.repository.*
   val countryRepository = new CountryRepository()
   val personRepository  = new PersonRepository()
 
-  object test extends MixinRepository
-
-  println(test)
   /*
   val test1 = personRepository.byName("N%")
   val test2 = personRepository.byName2("N%")

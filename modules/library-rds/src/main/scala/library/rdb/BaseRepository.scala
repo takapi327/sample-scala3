@@ -15,6 +15,7 @@ trait BaseRepository:
   private val constructor = classType.getDeclaredConstructor()
   private val instance    = constructor.newInstance()
 
+  /*
   private def createClient[T <: RepositoryClient](module: AbstractModule, classT: Class[T]): RepositoryClient =
     val injector: Injector = Guice.createInjector(module)
     injector.getInstance(classT)
@@ -33,8 +34,6 @@ import doobie.hikari.HikariTransactor
 import cats.effect.Resource
 
 trait RepositoryClient:
-
-  type M[_] <: Async
 
   val ConnectDB: Resource[M, HikariTransactor[M]]
 
@@ -56,6 +55,7 @@ class DoobieRepositoryImpl[M[_]: Async](
 ) extends DoobieRepository[M], RepositoryClient:
 
   val ConnectDB(): Resource[M, HikariTransactor[M]] = transactor
+*/
 
 /*
 import doobie.implicits.*
