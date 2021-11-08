@@ -1,5 +1,5 @@
-package library.rdb
-
+//package library.rdb
+/*
 trait JdbcUrlBuilder[+A]
 
 case class JdbcUrl[T]() extends JdbcUrlBuilder[T]
@@ -65,3 +65,4 @@ final class MariaDBJdbcUrlBuilder[R, A](private val eff: Eff[R, A])
   def buildJdbcUrl[U](
     using member: Member.Aux[JdbcUrlBuilder, R, U]
   ): Eff[U, A] = MariaDBJdbcUrlBuilder.buildJdbcUrl(eff)
+*/
