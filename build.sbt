@@ -4,8 +4,9 @@ ThisBuild / organization := "io.github.takapi327"
 ThisBuild / scalaVersion := "3.0.1"
 ThisBuild / startYear    := Some(2021)
 
-val doobieVersion = "1.0.0-RC1"
-val catsVersion   = "2.6.1"
+lazy val doobieVersion = "1.0.0-RC1"
+lazy val catsVersion   = "2.6.1"
+lazy val effVersion    = "5.21.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -32,9 +33,9 @@ lazy val libraryRds = (project in file("modules/library-rds"))
       "org.tpolecat"  %% "doobie-hikari"   % doobieVersion,
       "co.fs2"        %% "fs2-core"        % "3.1.3",
       "com.zaxxer"    %  "HikariCP"        % "5.0.0",
-      "org.atnos"     %% "eff"             % "5.21.0",
-      "org.atnos"     %% "eff-cats-effect" % "5.21.0",
-      "org.atnos"     %% "eff-doobie"      % "5.21.0",
+      "org.atnos"     %% "eff"             % effVersion,
+      "org.atnos"     %% "eff-cats-effect" % effVersion,
+      "org.atnos"     %% "eff-doobie"      % effVersion,
       "com.google.inject" % "guice" % "5.0.1"
     )
   )
@@ -68,5 +69,9 @@ lazy val commonSettings = Seq(
     "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
-  )
+  ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _))                  => Seq("-Ykind-projector:underscores")
+    case Some((2, 13)) | Some((2, 12)) => Seq("-Xsource:3", "-P:kind-projector:underscore-placeholders")
+    case _ => Seq.empty
+  })
 )
