@@ -27,7 +27,7 @@ trait MixinRepository(
   //println(c.newInstance)
   //println(Class.forName(libraryModule))
   //val c: Class[T] = Class.forName(libraryModule, true, tag.runtimeClass.getClassLoader).asInstanceOf[Class[T]]
-  val classType: Class[_] = Class.forName(libraryModule)//.asInstanceOf[Class[T]]
+  val classType: Class[?] = Class.forName(libraryModule)//.asInstanceOf[Class[T]]
   //println(c.getDeclaredConstructor())
   //println(c.getDeclaredConstructor().newInstance())
   val constructor = classType.getDeclaredConstructor()

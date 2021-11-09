@@ -11,7 +11,7 @@ trait BaseRepository:
   private lazy val config        = Configuration()
   private lazy val libraryModule = config.get[String]("library.rdb.module")
 
-  private val classType: Class[_] = Class.forName(libraryModule)
+  private val classType: Class[?] = Class.forName(libraryModule)
   private val constructor = classType.getDeclaredConstructor()
   private val instance    = constructor.newInstance()
 
