@@ -1,26 +1,120 @@
 
-import cats._, data._
+import scala.collection.mutable._
 
-import org.atnos.eff._
-import org.atnos.eff.all._
-import org.atnos.eff.syntax.all._
+import cats.data.*
+import cats.implicits.*
 
-type ReaderInt[A]    = Reader[Int, A]
-type WriterString[A] = Writer[String, A]
+import org.atnos.eff.*
+import org.atnos.eff.either.*
+import org.atnos.eff.writer.*
+import org.atnos.eff.state.*
+import org.atnos.eff.syntax.all.*
+import org.atnos.eff.interpret.*
 
-type Stack = Fx.fx3[WriterString, ReaderInt, Eval]
+sealed trait KVStore[+A]
 
-type _readerInt[R]    = ReaderInt |= R
-type _writerString[R] = WriterString |= R
+case class Put[T](key: String, value: T) extends KVStore[Unit]
+case class Get[T](key: String) extends KVStore[Option[T]]
+case class Delete(key: String) extends KVStore[Unit]
 
-def program[R :_readerInt :_writerString :_eval]: Eff[R, Int] =
-  for 
-    n <- ask[R, Int]
-    _ <- tell("必要な乗数は" + n)
-    a <- delay(math.pow(2, n.toDouble).toInt)
-    _ <- tell("結果は" + a)
+type _kvstore[R] = KVStore |= R
+
+def store[T, R: _kvstore](key: String, value: T): Eff[R, Unit] =
+  Eff.send[KVStore, R, Unit](Put(key, value))
+
+def find[T, R: _kvstore](key: String): Eff[R, Option[T]] =
+  Eff.send[KVStore, R, Option[T]](Get(key))
+
+def delete[T, R: _kvstore](key: String): Eff[R, Unit] =
+  Eff.send(Delete(key))
+
+def update[T, R: _kvstore](key: String, f: T => T): Eff[R, Unit] =
+  for
+    ot <- find[T, R](key)
+    _  <- ot.map(t => store[T, R](key, f(t))).getOrElse(Eff.pure(()))
   yield
-    a
+    ()
+
+def program[R: _kvstore]: Eff[R, Option[Int]] =
+  for
+    _ <- store("wild-cats", 2)
+    _ <- update[Int, R]("wild-cats", _ + 12)
+    _ <- store("tame-cats", 5)
+    n <- find[Int, R]("wild-cats")
+    _ <- delete("tame-cats")
+  yield
+    n
+
+/*
+def runKVStoreUnsafe[R, A](effects: Eff[R, A])(using m: KVStore <= R): Eff[m.Out, A] =
+  val kvs = Map.empty[String, Any]
+
+  val sideEffect = new SideEffect[KVStore] {
+    def apply[X](kv: KVStore[X]): X =
+      kv match
+        case Put(key, value) =>
+          println(s"put($key, $value)")
+          kvs.put(key, value)
+          ().asInstanceOf[X]
+        case Get(key) =>
+          println(s"get($key)")
+          kvs.get(key).asInstanceOf[X]
+        case Delete(key) =>
+          println(s"delete($key)")
+          kvs.remove(key)
+          ().asInstanceOf[X]
     
+    def applicative[X, Tr[_]: Traverse](ms: Tr[KVStore[X]]): Tr[X] =
+      ms.map(apply)
+  }
+  interpretUnsafe(effects)(sideEffect)(m)
+ */
+
+type _writerString[R] = Writer[String, *] |= R
+type _stateMap[R]     = State[Map[String, Any], *] |= R
+
+def runKVStore[R, U, A](effects: Eff[R, A])(using
+  member:    Member.Aux[KVStore, R, U],
+  throwable: _throwableEither[U],
+  writer:    _writerString[U],
+  state:     _stateMap[U]
+): Eff[U, A] =
+  translate(effects)(new Translate[KVStore, U] {
+    def apply[X](kv: KVStore[X]): Eff[U, X] =
+      kv match
+        case Put(key, value) =>
+          for
+            _ <- tell(s"put($key, $value)")
+            //_ <- modify((map: Map[String, Any]) => map.clone().addOne((key, value)))
+            _ <- modify((map: Map[String, Any]) => map += (key -> value))
+            r <- fromEither(Either.catchNonFatal(().asInstanceOf[X]))
+          yield r
+        case Get(key) =>
+          for
+            _ <- tell(s"get($key)")
+            m <- get[U, Map[String, Any]]
+            r <- fromEither(Either.catchNonFatal(m.get(key).asInstanceOf[X]))
+          yield r
+        case Delete(key) =>
+          for
+            _ <- tell(s"delete($key)")
+            _ <- modify((map: Map[String, Any]) => map -= key)
+            r <- fromEither(Either.catchNonFatal(().asInstanceOf[X]))
+          yield r
+  })
+
+extension [R, U, A](effects: Eff[R, A])(using
+  member:    Member.Aux[KVStore, R, U],
+  throwable: _throwableEither[U],
+  writer:    _writerString[U],
+  state:     _stateMap[U]
+)
+  def runStore = runKVStore(effects)
+
 @main def EffMain: Unit =
-  println(program[Stack].runReader(6).runWriter.runEval.run)
+
+  type Stack = Fx.fx4[KVStore, Either[Throwable, *], State[Map[String, Any], *], Writer[String, *]]
+  val (result, logs) =
+    program[Stack].runStore.runEither.evalState(Map.empty[String, Any]).runWriter.run
+
+  println((result.toString +: logs).mkString("\n"))
