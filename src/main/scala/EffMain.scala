@@ -111,6 +111,23 @@ extension [R, U, A](effects: Eff[R, A])(using
 )
   def runStore = runKVStore(effects)
 
+
+sealed trait Maybe[A]
+case class Just[A](a: A) extends Maybe[A]
+case class Nothing[A]() extends Maybe[A]
+
+object MaybeEffect:
+  type _maybe[R] = Maybe |= R
+
+  def just[R: _maybe, A](a: A): Eff[R, A] = send[Maybe, R, A](Just(a))
+  def nothing[R: _maybe, A]():  Eff[R, A] = send[Maybe, R, A](Nothing())
+  def runMaybe[R, U, A, B](effect: Eff[R, A])(
+    using m: Member.Aux[Maybe, R, U]
+  ): Eff[U, Option[A]] =
+    recurse(effect)(new Recurser[Maybe, U, A, Option[A] {
+      
+    })
+
 @main def EffMain: Unit =
 
   type Stack = Fx.fx4[KVStore, Either[Throwable, *], State[Map[String, Any], *], Writer[String, *]]
