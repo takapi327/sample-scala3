@@ -10,6 +10,8 @@ import org.http4s.blaze.server.*
 import org.http4s.implicits.*
 import org.http4s.server.Router
 
+import library.util.Configuration
+
 import interfaceAdapter.gateway.repository.*
 
 object personController:
@@ -42,9 +44,14 @@ val httpApp = Router(
 
 object Http4sMain extends IOApp:
 
+  private lazy val config = Configuration()
+
+  private lazy val host: String = config.get[String]("http.host")
+  private lazy val port: Int    = config.get[Int]("http.port")
+  
   def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
-      .bindHttp(8080, "localhost")
+      .bindHttp(port, host)
       .withHttpApp(httpApp)
       .withExecutionContext(global)
       .withoutBanner
