@@ -19,3 +19,4 @@ object ConfigLoader:
         f(config)(path)
 
   given ConfigLoader[String] = ConfigLoader(_.getString)
+  given ConfigLoader[Int]    = ConfigLoader(_.getInt)
