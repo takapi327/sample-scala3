@@ -24,6 +24,14 @@ class PersonRepository(
     val sql = "insert into person (name, age) values (?, ?)"
     Update[PersonInfo](sql).updateMany(ps)
 
+  def getById(id: Long): IO[(Long, String, Int)] =
+    transactor.use {
+      sql"select id, name, age from person where id = $id"
+        .query[(Long, String, Int)]
+        .unique
+        .transact[IO]
+    }
+    
   def byName(pat: String): Either[Throwable, List[(String, String)]] =
     /*
     val fragment:   doobie.util.fragment.Fragment                                                                  = sql"select name, code from country where name like $pat"
