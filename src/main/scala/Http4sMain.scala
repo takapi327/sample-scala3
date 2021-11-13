@@ -1,4 +1,5 @@
 
+import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import cats.effect.*
@@ -24,15 +25,19 @@ object personController:
     yield
       res
 
+object LongVar:
+  def unapply(str: String): Option[Long] =
+    if (!str.isEmpty) then Try(str.toLong).toOption else None
+
 val baseService = HttpRoutes.of[IO] {
   case GET -> Root / "hello" / name => Ok(s"Hello, $name.")
 }
 
 val personService = HttpRoutes.of[IO] {
-  case GET -> Root / "person" / id  => personController.getPerson(id.toLong)
+  case GET -> Root / "person" / LongVar(id)  => personController.getPerson(id)
 }
 
-val apiServices = baseService <+> personService 
+val apiServices = baseService <+> personService
 
 val httpApp = Router(
   "/"    -> baseService,
