@@ -51,9 +51,18 @@ val corsOriginService = CORS.policy
   .withMaxAge(1.seconds)
   .apply(baseService)
 
+def static(file: String, request: Request[IO]): IO[Response[IO]] = {
+  StaticFile.fromString("/Users/takapi327/development/sample-scala3/" + file, Some(request)).getOrElseF(NotFound())
+}
+
+val staticService = HttpRoutes.of[IO] {
+  case request @ GET -> Root / path if List(".html", ".css", ".js")
+    .exists(path.endsWith) => static(path, request)
+}
+
 val httpApp = Router(
-  "/"     -> baseService,
-  "/cors" -> CORS.policy.withAllowOriginAll(baseService),
+  "/"     -> staticService,
+  "/cors" -> corsOriginService,
   "/api"  -> apiServices
 ).orNotFound
 
