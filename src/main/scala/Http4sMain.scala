@@ -1,5 +1,6 @@
 
 import scala.util.Try
+import scala.concurrent.duration.*
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import cats.effect.*
@@ -10,6 +11,8 @@ import org.http4s.dsl.io.*
 import org.http4s.blaze.server.*
 import org.http4s.implicits.*
 import org.http4s.server.Router
+import org.http4s.headers.Origin
+import org.http4s.server.middleware.*
 
 import library.util.Configuration
 
@@ -17,7 +20,7 @@ import interfaceAdapter.gateway.repository.*
 
 object personController:
   val personRepository = PersonRepository()
-  
+
   def getPerson(id: Long): IO[Response[IO]] =
     for
       person <- personRepository.getById(id)
@@ -39,9 +42,19 @@ val personService = HttpRoutes.of[IO] {
 
 val apiServices = baseService <+> personService
 
+val corsOriginService = CORS.policy
+  .withAllowOriginHost(Set(
+    Origin.Host(Uri.Scheme.http,  Uri.RegName("localhost"), None),
+    Origin.Host(Uri.Scheme.https, Uri.RegName("localhost"), None)
+  ))
+  .withAllowCredentials(false)
+  .withMaxAge(1.seconds)
+  .apply(baseService)
+
 val httpApp = Router(
-  "/"    -> baseService,
-  "/api" -> apiServices
+  "/"     -> baseService,
+  "/cors" -> CORS.policy.withAllowOriginAll(baseService),
+  "/api"  -> apiServices
 ).orNotFound
 
 //given cs: ContextShift[IO] = IO.contextShift(global)
@@ -53,7 +66,7 @@ object Http4sMain extends IOApp:
 
   private lazy val host: String = config.get[String]("http.host")
   private lazy val port: Int    = config.get[Int]("http.port")
-  
+
   def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
       .bindHttp(port, host)
