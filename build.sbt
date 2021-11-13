@@ -7,6 +7,7 @@ ThisBuild / startYear    := Some(2021)
 lazy val doobieVersion = "1.0.0-RC1"
 lazy val catsVersion   = "2.6.1"
 lazy val effVersion    = "5.21.0"
+lazy val http4sVersion = "0.23.6"
 
 lazy val root = (project in file("."))
   .settings(
@@ -17,7 +18,10 @@ lazy val root = (project in file("."))
       "com.novocode"   %  "junit-interface"      % "0.11" % "test",
       "org.tpolecat"   %% "doobie-core"          % doobieVersion,
       "org.typelevel"  %% "cats-core"            % catsVersion,
-      "co.fs2"         %% "fs2-core"             % "3.1.3"
+      "co.fs2"         %% "fs2-core"             % "3.1.3",
+      "org.http4s"     %% "http4s-dsl"           % http4sVersion,
+      "org.http4s"     %% "http4s-blaze-server"  % http4sVersion,
+      "org.http4s"     %% "http4s-blaze-client"  % http4sVersion
     )
   )
   .aggregate(libraryRds, libraryUtil)
