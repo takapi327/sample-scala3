@@ -1,4 +1,4 @@
-
+/*
 import scala.collection.mutable._
 
 import cats.*
@@ -161,3 +161,4 @@ import MaybeEffect.*
     yield a + b
 
   println(run(runMaybe(action)))
+ */

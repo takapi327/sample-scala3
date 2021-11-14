@@ -10,8 +10,8 @@ import org.http4s.*
 import org.http4s.dsl.io.*
 import org.http4s.blaze.server.*
 import org.http4s.implicits.*
-import org.http4s.server.Router
 import org.http4s.headers.Origin
+import org.http4s.server.Router
 import org.http4s.server.middleware.*
 
 import library.util.Configuration

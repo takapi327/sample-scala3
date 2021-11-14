@@ -1,4 +1,4 @@
-
+/*
 import scala.concurrent.ExecutionContext
 
 import cats.data.*
@@ -14,7 +14,7 @@ import interfaceAdapter.gateway.repository.*
 
   val countryRepository = new CountryRepository()
   val personRepository  = new PersonRepository()
-
+*/
   /*
   val test1 = personRepository.byName("N%")
   val test2 = personRepository.byName2("N%")

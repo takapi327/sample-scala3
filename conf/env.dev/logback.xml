@@ -18,11 +18,29 @@
     </encoder>
   </appender>
 
+  <!-- HTTP4S出力用設定 -->
+  <appender name="HTTP4S" class="ch.qos.logback.core.ConsoleAppender">
+    <!--
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="mvc.util.LogbackJsonEncoder" />
+    </encoder>
+    -->
+    <encoder>
+      <pattern>
+        %d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) [%thread] %msg %n
+      </pattern>
+    </encoder>
+  </appender>
+
   <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
 
   <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
     <appender-ref ref="HIKARI-CP" />
+  </logger>
+
+  <logger name="org.http4s" level="INFO" additivity="false">
+    <appender-ref ref="HTTP4S" />
   </logger>
 </configuration>

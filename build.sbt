@@ -21,7 +21,8 @@ lazy val root = (project in file("."))
       "co.fs2"         %% "fs2-core"             % "3.1.3",
       "org.http4s"     %% "http4s-dsl"           % http4sVersion,
       "org.http4s"     %% "http4s-blaze-server"  % http4sVersion,
-      "org.http4s"     %% "http4s-blaze-client"  % http4sVersion
+      "org.http4s"     %% "http4s-blaze-client"  % http4sVersion,
+      "org.http4s"     %% "http4s-circe"         % http4sVersion
     )
   )
   .aggregate(libraryRds, libraryUtil)

@@ -1,4 +1,5 @@
 
+/*
 import UnionTypes._
 import Enumerations._
 import IntersectionTypes.*
@@ -292,3 +293,4 @@ val test2: Double = (l2 + l3).toDouble
 val test3: Logarithm2 = l2 * l3
 
 val d2: Double = test3.toDouble
+*/
