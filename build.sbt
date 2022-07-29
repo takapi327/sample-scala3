@@ -1,7 +1,7 @@
 
 ThisBuild / version      := "1.0.0"
 ThisBuild / organization := "io.github.takapi327"
-ThisBuild / scalaVersion := "3.0.1"
+ThisBuild / scalaVersion := "3.1.3"
 ThisBuild / startYear    := Some(2021)
 
 lazy val doobieVersion = "1.0.0-RC1"
