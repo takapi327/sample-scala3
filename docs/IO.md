@@ -64,6 +64,20 @@ Future/IOの違い -> 非同期/同期の話 -> そもそもスレッドって�
       - 昨今のアプリケーションの求められるものは、アクセス過多(通信リクエストを複数同時にさばくこと)にも耐えうる性能？
       - グリーンスレッドだとECSなどのパフォーマンスをあげなくても対応できる？
 
+## 非同期/同期
+[メモ]
+- 非同期処理は、スレッドプールの必要性に基づいて3つのグループに分けられる。
+  - ノンブロッキング非同期処理（HTTPリクエスト、データベースコールなど
+  - ブロック型非同期処理（例：ファイルシステムからの読み込み
+  - CPU負荷の高い処理（ビットコインの採掘など
+
+- ノンブロッキングの非同期操作
+  - 非常に少ない数のスレッド（1つだけかもしれません）で、非常に高い優先順位を持つバウンデッドプール。これらのスレッドは基本的にほとんどの時間アイドル状態で、新しい非同期 IO 通知があるかどうかポーリングしつづけます。これらのスレッドがリクエストの処理に費やす時間は、直接アプリケーションのレイテンシに対応します。したがって、通知を受け取ってアプリケーションの残りの部分に転送すること以外に、このプールで他の作業が行われないことが非常に重要です。
+- 非同期操作をブロックする。
+  - 非束縛キャッシュ・プール。ブロック操作はスレッドをしばらくの間ブロックする可能性があり、その間に他の I/O リクエストに対応できるようにしたいため、無制限。キャッシュされるのは、あまりに多くのスレッドを作成するとメモリ不足になる可能性があるため、既存のスレッドを再利用することが重要だからです。
+- CPUに負荷のかかる操作
+  - スレッド数がCPUコア数と等しくなるように固定されたプール。これは非常に簡単です。昔は、スレッド数＝CPUコア数＋1が「黄金律」でしたが、「＋1」は、余分なスレッドを常にI/O用に予約していたことに由来します（上で説明したように、現在はそのために別のプールが用意されています）。
+
 ## スレッドとは
 [メモ]
 - CPU利用の単位
@@ -118,6 +132,9 @@ Macのアクティビティモニタで、使用しているスレッド、プ�
 - Thread.start()を使うと、スレッドを作成するシステム・コール（Linuxのclone()など）が呼び出され、新しいOSスレッドが実際に作成されます。
 - Java 1.0のときのマルチスレッドの主な要求は、ロジック進行によってGUIが止まらないようにする、たとえば処理中にプログレスバーがちゃんと表示できるようにするものだったのだけど、いまのマルチスレッドの主な要求は通信リクエストを複数同時にさばくことに変化してる。
 - OpenJDKのProject Loomが仮想スレッドを追加実装しようとしている
+- JVMのスレッドは、OSのネイティブスレッドに1対1でマッピングされる
+- CPUがあるスレッドの実行を停止し、別のスレッドの実行を開始すると、OSは以前のタスクの状態を保存し、現在のタスクのために状態を復元する必要があります。このコンテキストスイッチにはコストがかかり、スループットが犠牲になる
+- スループットをある程度犠牲にして、公平性を確保することで、すべてのタスクがCPU時間のシェアを得ることを確実にし、どのタスクも長く待たされることがないようできる
 
 ## Futureパターン
 
@@ -130,3 +147,19 @@ Macのアクティビティモニタで、使用しているスレッド、プ�
 ## IO
 ## Future/IOのパフォーマンス
 ## まとめ
+
+## 参考文献
+- [デザインパターン紹介](https://www.hyuki.com/dp/dpinfo.html#Future)
+- [作って学ぶ、cats.effect.IO モナドのしくみ](https://blog-dry.com/entry/2020/01/04/140139#f-822e1275)
+- [cats.effectのIOモナドとcontextshiftを丁寧に理解する](https://sakataharumi.hatenablog.jp/entry/2020/08/30/230025)
+- [Cats Effect - How it works technically?](https://www.reddit.com/r/scala/comments/s23dve/cats_effect_how_it_works_technically/)
+- [なぜ Go では何百万もの Goroutine を作れるのに Java は数千のスレッドしか作れないのか?](https://mahata.gitlab.io/post/2018-10-15-goroutines-vs-java-threads/)
+- [並列処理の用語](https://alexei-karamazov.hatenablog.com/entry/2014/04/20/105644)
+- [マルチスレッドモデル](https://docs.oracle.com/cd/E19620-01/805-5818/6j5g78lkj/index.html)
+- [JavaのProject Loomと仮想スレッドの内部](https://blogs.oracle.com/oracle4engineer/post/going-inside-javas-project-loom-and-virtual-threads-ja)
+- [Java’s Thread Model and Golang Goroutine](https://medium.com/@genchilu/javas-thread-model-and-golang-goroutine-f1325ca2df0c)
+- [【図解】初心者向けユーザー空間とカーネル空間,システムコール,MMU/メモリ保護,の仕組み](https://milestone-of-se.nesuke.com/sv-basic/architecture/user-space-kernel-space/)
+- [【図解】仮想記憶(仮想メモリ)の本質や仕組み、メリット　〜スワップ、MMU、ページングテーブルについて〜](https://milestone-of-se.nesuke.com/sv-basic/architecture/virtual-memory-and-swap/)
+- [Concurrency In Scala with Cats-Effect](https://github.com/slouc/concurrency-in-scala-with-ce)
+- [The fork/join framework in Java 7](http://www.h-online.com/developer/features/The-fork-join-framework-in-Java-7-1762357.html)
+- [Cats Effect 3 - Introduction to Fibers](https://blog.rockthejvm.com/cats-effect-fibers/)
