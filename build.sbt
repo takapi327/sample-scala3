@@ -14,6 +14,7 @@ lazy val root = (project in file("."))
     name := "sample-scala3",
     commonSettings,
     libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-effect" % "3.3.3",
       "mysql"          %  "mysql-connector-java" % "8.0.26",
       "com.novocode"   %  "junit-interface"      % "0.11" % "test",
       "org.tpolecat"   %% "doobie-core"          % doobieVersion,
