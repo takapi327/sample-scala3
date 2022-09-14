@@ -1,4 +1,227 @@
 
+import java.util.concurrent.Executors
+
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.duration.*
+
+import cats.effect.*
+import cats.effect.unsafe.implicits.global
+import cats.implicits.*
+
+@main def Main: Unit =
+
+  val hello = MyIO.putStr("hello!")
+  val world = MyIO.putStr("world!")
+
+  val helloWorld: MyIO[Unit] =
+    for
+      _ <- hello
+      _ <- world
+    yield ()
+
+  helloWorld.unsafeRun()
+
+  val ohNoes: IO[Int] =
+    IO(throw new RuntimeException("oh noes!"))
+
+  given scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+  val ohNoesFuture: Future[Int] =
+    Future(throw new RuntimeException("oh noes!"))
+
+  println(ohNoesFuture)
+
+object HelloWold extends IOApp:
+  def run(args: List[String]): IO[ExitCode] =
+    tickingClock.as(ExitCode.Success)
+
+  def tickingClock: IO[Unit] =
+    for
+      _ <- IO.println(System.currentTimeMillis)
+      _ <- IO.sleep(1.second)
+      _ <- tickingClock
+    yield ()
+
+@main def Future1(): Future[Unit] =
+  given ExecutionContext = ExecutionContext.global
+
+  val hello = Future(println(s"[${Thread.currentThread.getName}] Hello"))
+  val world = Future(println(s"[${Thread.currentThread.getName}] World"))
+
+  val hw1: Future[Unit] =
+    for
+      _ <- hello
+      _ <- world
+    yield ()
+
+  Await.ready(hw1, 5.seconds)
+
+  val hw2: Future[Unit] =
+    (hello, world).mapN((_, _) => ())
+
+  Await.ready(hw2, 5.seconds)
+
+@main def Future2(): Future[Unit] =
+  given ExecutionContext = ExecutionContext.global
+
+  def hello(num: Int) = Future(println(s"[${Thread.currentThread.getName}] Hello $num"))
+  def world(num: Int) = Future(println(s"[${Thread.currentThread.getName}] World $num"))
+
+  val hw1: Future[Unit] =
+    for
+      _ <- hello(1)
+      _ <- world(1)
+    yield ()
+
+  Await.ready(hw1, 5.seconds)
+
+  val hw2: Future[Unit] =
+    (hello(2), world(2)).mapN((_, _) => ())
+
+  Await.ready(hw2, 5.seconds)
+
+extension [A](ioa: IO[A])
+  def debug: IO[A] = for
+    a  <- ioa
+    tn = Thread.currentThread.getName
+    _  = println(s"[$tn] $a")
+  yield a
+
+@main def IOComposition: Unit =
+  val hello = IO.println(s"[${Thread.currentThread.getName}] Hello")
+  val world = IO.println(s"[${Thread.currentThread.getName}] World")
+
+  val hw1: IO[Unit] = for
+    _ <- hello
+    _ <- world
+  yield ()
+
+  val hw2: IO[Unit] =
+    (hello, world).mapN((_, _) => ())
+
+  hw1.unsafeRunSync()
+  hw2.unsafeRunSync()
+
+object DebugExample extends IOApp:
+
+  def run(args: List[String]): IO[ExitCode] =
+    seq.as(ExitCode.Success)
+
+  val hello = IO("hello").debug
+  val world = IO("world").debug
+
+  val seq = (hello, world)
+    .mapN((h, w) => s"$h $w")
+    .debug
+
+object ParMapN extends IOApp:
+
+  def run(args: List[String]): IO[ExitCode] =
+    par.as(ExitCode.Success)
+
+  val hello = IO("hello").debug
+  val world = IO("world").debug
+
+  val par = (hello, world)
+    .parMapN((h, w) => s"$h $w")
+    .debug
+
+object ParMapNErrors extends IOApp:
+  def run(args: List[String]): IO[ExitCode] =
+    e1.attempt.debug *>
+      e2.attempt.debug *>
+      e3.attempt.debug *>
+      IO.pure(ExitCode.Success)
+
+  val ok  = IO("hi").debug
+  val ko1 = IO.sleep(1.second).as("ko1").debug *>
+    IO.raiseError[String](new RuntimeException("oh!")).debug
+  val ko2 = IO.raiseError[String](RuntimeException("noes!")).debug
+  val e1  = (ok, ko1).parTupled.void
+  val e2  = (ko1, ok).parTupled.void
+  val e3  = (ko1, ko2).parTupled.void
+
+object ParTraverse extends IOApp:
+  def run(args: List[String]): IO[ExitCode] =
+    tasks.parTraverse(task).debug.as(ExitCode.Success)
+
+  val numTasks = 100
+  val tasks: List[Int] = List.range(0, numTasks)
+  def task(id: Int): IO[Int] = IO(id).debug
+
+object Test:
+  given String = "test"
+  given Long   = 1L
+  def test(t: Long ?=> String ?=> Unit): Unit = t
+
+@main def contextFunctionTest =
+
+  Test.test {
+    println(summon[String])
+    println(summon[Long])
+  }
+
+
+
+/*
+def get(using Int): String = summon[Int].toString
+
+def pf1: PartialFunction[String, Int => String] = {
+  case "hoge" => int => int.toString
+  case "huga" => int => int.toString
+}
+
+def pf2: PartialFunction[String, Int ?=> String] = {
+  case "hoge" => get
+  case "huga" => get
+}
+
+println(pf1.isDefinedAt("hoge"))
+println(pf1.isDefinedAt("huga"))
+println(pf1("huga")(1))
+println(pf1.unapply("hogehoge"))
+println(pf1.isDefinedAt("hogehoge"))
+
+println(pf2.isDefinedAt("hoge"))
+println(pf2.isDefinedAt("huga"))
+println(pf2("huga")(using 2))
+println(pf2.unapply("hogehoge"))
+println(pf2.isDefinedAt("hogehoge"))
+*/
+
+  //def lift1 = new LiftedTest(pfTest1)
+  //println(lift1("hoge"))
+  //println(lift1("huga"))
+  //println(lift1("hogehoge"))
+
+  //def lift2 = new LiftedTest(pfTest2)
+  //println(lift2("hoge"))
+  //println(lift2("huga"))
+  //println(lift2("hogehoge"))
+
+  //lazy val fallback_fn: Any => Any = _ => fallback_fn
+  //def checkFallback[B] = fallback_fn.asInstanceOf[Any => B]
+  //def fallbackOccurred[B](x: B) = fallback_fn eq x.asInstanceOf[AnyRef]
+//
+  //class LiftedTest[-A, +B] (val pf: PartialFunction[A, B])
+  //  extends scala.runtime.AbstractFunction1[A, Option[B]] with Serializable {
+//
+  //  def apply(x: A): Option[B] = {
+  //    val z = pf.applyOrElse(x, checkFallback[B])
+  //    if (!fallbackOccurred(z)) Some(z) else None
+  //  }
+  //}
+
+case class MyIO[A](unsafeRun: () => A):
+  def map[B](f: A => B): MyIO[B] =
+    MyIO(() => f(unsafeRun()))
+
+  def flatMap[B](f: A => MyIO[B]): MyIO[B] =
+    MyIO(() => f(unsafeRun()).unsafeRun())
+
+object MyIO:
+  def putStr(s: => String): MyIO[Unit] =
+    MyIO(() => println(s))
+
 /*
 import UnionTypes._
 import Enumerations._
