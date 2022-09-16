@@ -66,9 +66,6 @@ val httpApp = Router(
   "/api"  -> apiServices
 ).orNotFound
 
-//given cs: ContextShift[IO] = IO.contextShift(global)
-//given timer: Timer[IO] = IO.timer(global)
-
 object Http4sMain extends IOApp:
 
   private lazy val config = Configuration()
