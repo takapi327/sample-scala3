@@ -12,6 +12,9 @@ Future/IOの違い -> 非同期/同期の話 -> そもそもスレッドって�
 - スレッドの種類
   - ネイティブスレッド
   - グリーンスレッド
+- スレッドプール
+  - ワークスティーリング
+  - Fork/Join
 - Javaのスレッド
 - JVMはOSのスレッドを使用
 - Futureパターン
@@ -195,3 +198,7 @@ Macのアクティビティモニタで、使用しているスレッド、プ�
 - [Concurrency In Scala with Cats-Effect](https://github.com/slouc/concurrency-in-scala-with-ce)
 - [The fork/join framework in Java 7](http://www.h-online.com/developer/features/The-fork-join-framework-in-Java-7-1762357.html)
 - [Cats Effect 3 - Introduction to Fibers](https://blog.rockthejvm.com/cats-effect-fibers/)
+- [Cats Effect 3 - Racing IOs](https://blog.rockthejvm.com/cats-effect-racing-fibers/)
+- [さあ、並列プログラミングをはじめよう](https://qiita.com/koduki/items/086d42b5a3c74ed8b59e#akka)
+- [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
+- [[非同期処理] [雑記] スレッド プールとタスク](https://ufcpp.net/study/csharp/misc_task.html#thread_pool4)
