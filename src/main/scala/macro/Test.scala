@@ -25,3 +25,9 @@ object Test extends App:
     Debug.debug(x, y, z)
 
   test
+
+  println("--")
+
+  PrintTree.printTree {
+    (s: String) => s.length
+  }
