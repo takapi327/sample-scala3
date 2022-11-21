@@ -31,3 +31,10 @@ object Test extends App:
   PrintTree.printTree {
     (s: String) => s.length
   }
+
+  trait Base
+  case class Test(name: String, age: Long) extends Base
+  println(PrintTree.name[Test])
+  println(PrintTree.fieldMembers[Test])
+  println(PrintTree.caseFields[Test])
+  println(PrintTree.children[Test])
