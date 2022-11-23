@@ -30,3 +30,22 @@ object Debug:
       .getOrElse('{""})
 
     '{println($concatenatedStringsExp)}
+
+  import scala.deriving.Mirror
+  inline def mirror[T](using m: Mirror.Of[T]): m.MirroredElemTypes = ???
+
+  inline def inject[T](inline className: String): T = ${injectImpl[T]('className)}
+  @annotation.experimental
+  def injectImpl[T: Type](className: Expr[String])(using q: Quotes): Expr[T] =
+    import q.reflect.*
+    val parents = List(TypeTree.of[T])
+    def decls(cls: Symbol): List[Symbol] =
+      List(Symbol.newMethod(cls, "print", MethodType(Nil)(_ => Nil, _ => TypeRepr.of[String])))
+    val cls = Symbol.newClass(Symbol.spliceOwner, className.show, parents = parents.map(_.tpe), decls, selfType = None)
+    //val cls = Symbol.classSymbol(className.show)
+    val printSym = cls.declaredMethod("print").head
+    val printDef = DefDef(printSym, _ => Some('{"Hello"}.asTerm))
+    val clsDef = ClassDef(cls, parents, body = List(printDef))
+    val newCls = Typed(Apply(Select(New(TypeIdent(cls)), cls.primaryConstructor), Nil), TypeTree.of[T])
+    val list = List(clsDef)
+    Block(list, newCls).asExprOf[T]
