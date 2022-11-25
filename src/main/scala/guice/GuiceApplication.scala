@@ -27,7 +27,7 @@ class Repository @Inject()(connection: Connection):
 class Controller @Inject()(database: module.Database, repository: Repository):
   val ok: IO[Response[IO]] =
     for
-      todo <- repository.getAll//sql"select id, title, description from todo_task".query[Todo].to[List].transact[IO](connection.xa)
+      todo <- repository.getAll
       res  <- Ok(database.name + todo.toString)
     yield res
 
