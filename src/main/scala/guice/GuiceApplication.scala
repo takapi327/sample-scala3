@@ -8,18 +8,30 @@ import com.comcast.ip4s.*
 
 import cats.effect.*
 
+import doobie.*
+import doobie.implicits.*
+
 import org.http4s.*
 import org.http4s.dsl.io.*
 import org.http4s.server.{ Server, Router }
 import org.http4s.ember.server.EmberServerBuilder
 
-@Singleton
-class Controller @Inject()(database: module.Database):
-  val ok: IO[Response[IO]] =
-    Ok(database.name)
+case class Todo(id: Option[Long], title: String, description: Option[String])
 
 @Singleton
-class GuiceApplication:
+class Repository @Inject()(connection: Connection):
+  def getAll =
+    sql"select id, title, description from todo_task".query[Todo].to[List].transact[IO](connection.xa)
+
+@Singleton
+class Controller @Inject()(database: module.Database, repository: Repository):
+  val ok: IO[Response[IO]] =
+    for
+      todo <- repository.getAll//sql"select id, title, description from todo_task".query[Todo].to[List].transact[IO](connection.xa)
+      res  <- Ok(database.name + todo.toString)
+    yield res
+
+object GuiceApplication:
 
   import scala.deriving.Mirror
   import scala.reflect.ClassTag
