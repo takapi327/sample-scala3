@@ -22,7 +22,6 @@ object Main extends ResourceApp.Forever:
   //val default = Resource.eval(Sync[IO].delay(Map.empty[String, HikariTransactor[IO]]))
 
   def run(args: List[String]): Resource[IO, Unit] =
-    //instance.start(injector).map(_ => ())
     for
       ec <- ExecutionContexts.fixedThreadPool[IO](32)
       xa <- HikariTransactor.newHikariTransactor[IO](
