@@ -17,6 +17,8 @@ import org.http4s.dsl.io.*
 import org.http4s.server.{ Server, Router }
 import org.http4s.ember.server.EmberServerBuilder
 
+import guice.model.Connection
+
 case class Task(
   id:          Option[Long]   = None,
   title:       String,
