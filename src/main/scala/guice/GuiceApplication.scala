@@ -10,18 +10,26 @@ import cats.effect.*
 
 import doobie.*
 import doobie.implicits.*
+import doobie.hikari.HikariTransactor
 
 import org.http4s.*
 import org.http4s.dsl.io.*
 import org.http4s.server.{ Server, Router }
 import org.http4s.ember.server.EmberServerBuilder
 
-case class Todo(id: Option[Long], title: String, description: Option[String])
+case class Task(
+  id:          Option[Long]   = None,
+  title:       String,
+  description: Option[String] = None
+)
+
+object Task
+
 
 @Singleton
 class Repository @Inject()(connection: Connection):
   def getAll =
-    sql"select id, title, description from todo_task".query[Todo].to[List].transact[IO](connection.xa)
+    sql"select id, title, description from todo_task".query[Task].to[List].transact[IO](connection.xa)
 
 @Singleton
 class Controller @Inject()(database: module.Database, repository: Repository):
