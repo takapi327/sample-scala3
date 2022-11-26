@@ -14,16 +14,18 @@ lazy val root = (project in file("."))
     name := "sample-scala3",
     commonSettings,
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-effect" % "3.3.3",
-      "mysql"          %  "mysql-connector-java" % "8.0.26",
-      "com.novocode"   %  "junit-interface"      % "0.11" % "test",
-      "org.tpolecat"   %% "doobie-core"          % doobieVersion,
-      "org.typelevel"  %% "cats-core"            % catsVersion,
-      "co.fs2"         %% "fs2-core"             % "3.1.3",
-      "org.http4s"     %% "http4s-dsl"           % http4sVersion,
-      "org.http4s"     %% "http4s-blaze-server"  % http4sVersion,
-      "org.http4s"     %% "http4s-blaze-client"  % http4sVersion,
-      "org.http4s"     %% "http4s-circe"         % http4sVersion
+      "org.typelevel"     %% "cats-effect"          % "3.3.3",
+      "com.google.inject" %  "guice"                % "5.1.0",
+      "mysql"             %  "mysql-connector-java" % "8.0.26",
+      "com.novocode"      %  "junit-interface"      % "0.11" % "test",
+      "org.tpolecat"      %% "doobie-core"          % doobieVersion,
+      "org.typelevel"     %% "cats-core"            % catsVersion,
+      "co.fs2"            %% "fs2-core"             % "3.1.3",
+      "org.http4s"        %% "http4s-dsl"           % http4sVersion,
+      "org.http4s"        %% "http4s-blaze-server"  % http4sVersion,
+      "org.http4s"        %% "http4s-blaze-client"  % http4sVersion,
+      "org.http4s"        %% "http4s-circe"         % http4sVersion,
+      "org.http4s"        %% "http4s-ember-server"  % "0.23.14"
     )
   )
   .aggregate(libraryRds, libraryUtil)
