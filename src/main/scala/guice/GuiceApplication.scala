@@ -27,7 +27,6 @@ case class Task(
 
 object Task
 
-
 @Singleton
 class Repository @Inject()(connection: Connection):
   def getAll =
@@ -40,19 +39,20 @@ class Controller @Inject()(database: module.Database, repository: Repository):
       todo <- repository.getAll
       res  <- Ok(database.name + todo.toString)
     yield res
+object Controller:
+  def apply(): Injector ?=> Controller = inject[Controller]
+
+import scala.reflect.ClassTag
+def inject[T](clazz: Class[T])(using injector: Injector): T =
+  injector.getInstance[T](clazz)
+def inject[T: ClassTag](using Injector): T =
+  inject[T](summon[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
 
 object GuiceApplication:
 
-  import scala.deriving.Mirror
-  import scala.reflect.ClassTag
-  def inject[T](clazz: Class[T])(using injector: Injector): T =
-    injector.getInstance[T](clazz)
-  def inject[T: ClassTag](using Injector): T =
-    inject[T](summon[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
-
   def app(using Injector) = Router(
     "/" -> HttpRoutes.of[IO] {
-      case GET -> Root => inject[Controller].ok
+      case GET -> Root => Controller().ok
     }
   ).orNotFound
 
