@@ -233,4 +233,4 @@ Hello World!
 
 したがって、Futureは効果記述と実行を分離しないので、安全ではありません。
 
-![スクリーンショット 2022-12-06 18.28.24.png](..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2Fk4%2Fk4ln8jrd41s07gdtr22_swxh0000gp%2FT%2FTemporaryItems%2F%EF%BC%88screencaptureui%E3%81%A7%E4%BF%9D%E5%AD%98%E4%B8%AD%E3%81%AE%E6%9B%B8%E9%A1%9E39%EF%BC%89%2F%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202022-12-06%2018.28.24.png)
+![future_is_unsafe.png](./images/future_is_unsafe.png)
