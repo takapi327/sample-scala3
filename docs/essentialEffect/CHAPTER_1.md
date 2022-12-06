@@ -179,3 +179,58 @@ Optionは副作用を実行しないので、エフェクトと呼ぶのは奇�
 
 したがって、Optionは効果である。
 
+### 1.3.2. 例: Futureは効果か？
+
+Futureには、簡単には見えない問題があることが知られています。例えば、次のコードを見てください。同じFutureを参照して、2回実行しています。
+
+```scala
+val print = Future(println("Hello World!"))
+val twice = print.flatMap(_ => print)
+```
+
+どのような出力が出るのか？
+
+```shell
+Hello World!
+```
+
+印刷されるのは1回だけ! なぜでしょう？
+
+その理由は、Futureは構築されるとすぐに実行されるようにスケジュールされているからです。そのため、他の「記述的」な操作（flatMapの後続の印刷）が後で起こったとしても、副作用は（ほとんど）すぐに起こります。つまり、printを2回実行することを記述していますが、副作用は1回しか実行されないのです!
+
+この実装にprintの定義を代入するとどうなるか、比べてみてください。
+
+1. Replace the first reference to print with its definition
+```scala
+val print = Future(println("Hello World!"))
+val twice = Future(println("Hello World!")).flatMap(_ => print)
+```
+
+2. 2番目のprintへの参照をその定義に置き換え、printの定義を削除します。
+```scala
+val twice = Future(println("Hello World!"))
+  .flatMap(_ => Future(println("Hello World!")))
+```
+
+それを実行することで、私たちは見ることができます。
+
+```shell
+Hello World!
+Hello World!
+```
+
+これが、Future is not an effectと言う理由です。表現をその定義に置き換えることは、同じ意味を持ちません。
+
+####  Effect Pattern Checklist: Future[A]の場合
+
+1. プログラムの種類でわかるのか
+1. どのような効果をもたらすのか、そして
+   ```Futureは非同期の計算を表します。```
+2. どのような価値を生み出すのか？
+   ```非同期計算が成功した場合、タイプAの値を返す。```
+2. 外部から見える副作用が必要な場合、その効果の記述は実行と分離されているか？ 実行とは別のものか？
+   ```外から見える副作用が必要：Future本体は副作用も含めて何でもできる。しかし、それらの副作用は、構成された操作の記述の後に実行されるのではなく、構築時に直ちに実行がスケジューリングされる。```
+
+したがって、Futureは効果記述と実行を分離しないので、安全ではありません。
+
+![スクリーンショット 2022-12-06 18.28.24.png](..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2Fk4%2Fk4ln8jrd41s07gdtr22_swxh0000gp%2FT%2FTemporaryItems%2F%EF%BC%88screencaptureui%E3%81%A7%E4%BF%9D%E5%AD%98%E4%B8%AD%E3%81%AE%E6%9B%B8%E9%A1%9E39%EF%BC%89%2F%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202022-12-06%2018.28.24.png)
