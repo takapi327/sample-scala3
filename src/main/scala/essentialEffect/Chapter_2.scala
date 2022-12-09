@@ -1,7 +1,7 @@
 package essentialEffect
 
 import scala.concurrent.{ Future, ExecutionContext }
-//import concurrent.ExecutionContext.Implicits.global
+import concurrent.ExecutionContext.Implicits.global
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
@@ -41,11 +41,15 @@ import cats.effect.unsafe.implicits.global
   def futurish3: Future[String] = Future(Thread.currentThread().getName)(using cats.effect.unsafe.implicits.global.compute)
   val fut: IO[String] = IO.fromFuture(IO(futurish3))
 
+  import cats.syntax.all.*
+  val test = (IO(println(s"${Thread.currentThread().getName} 1")), IO(println(s"${Thread.currentThread().getName} 1"))).parMapN((_, _) => {
+    println(Thread.currentThread().getName)
+  })
+
   (for
     v1 <- fut
-    v2 <- fut
+    v2 <- fut >> test >> IO(println(s"${Thread.currentThread().getName} 2")) >> IO(println(s"${Thread.currentThread().getName} 2"))
   yield
     println(v1)
     println(v2)
     println(Thread.currentThread().getName)).unsafeRunSync()
-
