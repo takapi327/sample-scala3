@@ -393,23 +393,75 @@ mapN と parMapN は任意のアリティのタプルに作用するので、任
 parMapN を使用するアプリケーションの例と、その内容を確認するためのデバッ グを作成しましょう。
 
 ```scala
-package sample.effect
+package essentialEffect
 
-import cats.effect._
-import cats.implicits._
-import com.innerproduct.ee.debug._
+import cats.effect.*
+import cats.implicits.*
 
-object ParMapN extends IOApp {
+object ParMapN extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
     par.as(ExitCode.Success)
-  
+
   val hello = IO("hello").debug // 1
   val world = IO("world").debug // 1
 
   val par = (hello, world)
     .parMapN((h, w) => s"$h $w") // 2
     .debug // 3
-}
+
+  extension [A](ioa: IO[A])
+  def debug: IO[A] =
+    for
+      a <- ioa
+  yield
+  println(s"[${Thread.currentThread().getName}] $a")
+  a
 ```
 
+1. 実行されるIO値ごとにデバッグを行う（並列）。
+2. 先ほどの例ではmapNではなくparMapNを使っています。
+3. 構成されたIO値もデバッグします。何が出力されると思いますか？どのスレッドで実行されると思いますか？
+
+ParMapNプログラムを実行すると、次のような結果が得られます。
+
+```shell
+[info] [io-compute-13] hello      // 1
+[info] [io-compute-3] world       // 1
+[info] [io-compute-9] hello world // 1
+
+or
+
+[info] [io-compute-12] world      // 1
+[info] [io-compute-7] hello       // 1
+[info] [io-compute-1] hello world // 1
+```
+
+1. parMapN を使ったタスクアクションの実行。使用されるスレッドが異なることに注意してください!
+
+並列タスクの実行順序は非決定的であるため、プログラムを実行すると、helloとworld が異なる順序で表示されることがあります。
+
+### 3.4.1. エラーが発生した場合の parMapN の動作
+
+成功効果と失敗効果の順列を表す3つの parMapN で構成された効果の出力を表示するプログラムを紹介します。入力効果の1つ（またはそれ以上）にエラーがある場合はどうなりますか？どのような値が返されるのでしょうか？それは決定論的ですか？
+
+```scala
+object ParMapNErrors extends IOApp:
+
+  def run(args: List[String]): IO[ExitCode] =
+    e1.attempt.debug *> // 1
+      IO("---").debug *>
+      e2.attempt.debug *>
+      IO("---").debug *>
+      e3.attempt.debug *>
+      IO.pure(ExitCode.Success)
+
+  val ok = IO("hi").debug
+  val ko1 = IO.raiseError[String](new RuntimeException("oh!")).debug
+  val ko2 = IO.raiseError[String](new RuntimeException("noes!")).debug
+  val e1 = (ok, ko1).parMapN((_, _) => ())
+  val e2 = (ko1, ok).parMapN((_, _) => ())
+  val e3 = (ko1, ko2).parMapN((_, _) => ())
+```
+
+1. attempt は IO[A] を IO[Either[Throwable, A]] に変換し、必ず成功するようにします（ただし、実際に失敗した場合は Left の値で）。attempt を使って、エラー実験がプログラムを停止させないようにします。

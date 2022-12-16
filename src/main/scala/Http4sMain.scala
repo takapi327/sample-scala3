@@ -60,8 +60,21 @@ val staticService = HttpRoutes.of[IO] {
     .exists(path.endsWith) => static(path, request)
 }
 
+def requestToResponse(request: Request[IO]): IO[Response[IO]] =
+  ->.unapply(request) match
+    case Some((method, path1)) if method.name == "GET" => /.unapply(path1) match
+      case Some((path2, str)) => /.unapply(path2) match
+        case Some((_, str1)) if str1 == "hello" => Ok(s"Hello, $str")
+        case _ => NotFound("")
+      case None => NotFound("")
+end requestToResponse
+
+val testService = HttpRoutes.of[IO] {
+  case request => requestToResponse(request)
+}
+
 val httpApp = Router(
-  "/"     -> staticService,
+  "/"     -> testService,//staticService,
   "/cors" -> corsOriginService,
   "/api"  -> apiServices
 ).orNotFound
