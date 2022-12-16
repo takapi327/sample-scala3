@@ -25,6 +25,8 @@ object ParMapN extends IOApp:
     .parMapN((h, w) => s"$h $w") // 2
     .debug // 3
 
+import scala.concurrent.duration.*
+
 object ParMapNErrors extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
@@ -36,8 +38,8 @@ object ParMapNErrors extends IOApp:
       IO.pure(ExitCode.Success)
 
   val ok = IO("hi").debug
-  val ko1 = IO.raiseError[String](new RuntimeException("oh!")).debug
-  val ko2 = IO.raiseError[String](new RuntimeException("noes!")).debug
+  val ko1 = IO.sleep(1.second).as("ko1").debug *> IO.raiseError[String](new RuntimeException("oh!"))
+  val ko2 = IO.raiseError[String](new RuntimeException("noes!"))
   val e1 = (ok, ko1).parMapN((_, _) => ())
   val e2 = (ko1, ok).parMapN((_, _) => ())
   val e3 = (ko1, ko2).parMapN((_, _) => ())
