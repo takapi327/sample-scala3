@@ -390,7 +390,7 @@ mapN と parMapN は任意のアリティのタプルに作用するので、任
 2. Three effects → one effect.
 3. Four effects → one effect.
 
-parMapN を使用するアプリケーションの例と、その内容を確認するためのデバッ グを作成しましょう。
+parMapN を使用するアプリケーションの例と、その内容を確認するためのデバッグを作成しましょう。
 
 ```scala
 package essentialEffect
@@ -465,3 +465,221 @@ object ParMapNErrors extends IOApp:
 ```
 
 1. attempt は IO[A] を IO[Either[Throwable, A]] に変換し、必ず成功するようにします（ただし、実際に失敗した場合は Left の値で）。attempt を使って、エラー実験がプログラムを停止させないようにします。
+
+まず、これらの効果のすべてについて真でなければならないことを説明しましょう： parMapN の結果は、効果のいずれか（少なくとも1つ）が失敗した場合に失敗します。そして，出力には e1，e2，e3 に対応する 3 つの Left 値が生成されることがわかる．同時に、各サブエフェクト（ok, ko1, ko2）は並列に実行されていることがわかる。
+
+これらの条件を考えると、e1 の効果については、ok の出力が見えるので、ko1 の前に ok が実行されたことになる。e2からはokの出力が見えないので、e2のko1効果が先に起こったと考えることができる。
+
+e1 ok の効果も e2 ko1 の効果も parMapN の最初の引数になっています。これは、parMapN への最も左の引数が常に最初に実行されるということですか？必ずしもそうではありません。ko1 の実行を sleep で遅らせた場合を考えてみましょう。
+
+```scala
+val ko1 = IO.sleep(1.second).as("ko1").debug *> IO.raiseError[String](new RuntimeException("oh!"))
+````
+
+```shell
+[info] running (fork) essentialEffect.ParMapNErrors 
+[info] [io-compute-6] hi                                    // 1
+[info] [io-compute-3] ko1                                   // 1
+[info] [io-compute-3] Left(java.lang.RuntimeException: oh!) // 1
+[info] [io-compute-3] ---
+[info] [io-compute-6] hi                                    // 2
+[info] [io-compute-2] ko1                                   // 2
+[info] [io-compute-2] Left(java.lang.RuntimeException: oh!) // 2
+[info] [io-compute-2] ---
+[info] [io-compute-8] Left(java.lang.RuntimeException: noes!) // 3
+```
+
+1. ko1 を遅延させたので、e1 では ko1 が例外を引き起こす前に ok と ko1 の出力を見ることができます。
+2. e2 では、ko1 が parMapN の第一引数であるにもかかわらず、e1 と同じ出力を見ることができます。
+3. e2 では、ko1 が遅延して ko2 の後に実行されたので、ko2 の出力を見ることができます。
+
+parMapN 中に失敗があった場合はどうなりますか？最初に起こった失敗を合成効果の失敗として使用します。
+
+### 3.4.2. parTupled
+
+parMapN((_, _) => ()) のコードは少し醜いように見えます。このコードで2つのことを行っています。
+
+1. インプット・エフェクトの結果がどうであれ、私たちはUnitを作りたいのです。
+2.  入力効果の2つの結果が何であるかは気にしないので、名前を付けて無視します。
+
+最初の目的を達成するために、voidコンビネータを使うことができる、それは次のように定義される。
+`map(_ ⇒())`
+
+```scala
+val e1 = (ok, ko1).parMapN(???).void
+```
+
+しかし、`???`の代わりに何を入れればいいのだろうか？mapNに渡すことのできる最も単純な関数は、何もしない関数である。
+
+```scala
+val e1 = (ok, ko1).parMapN((l, r) => (l, r)).void
+```
+
+catsは入力のタプル化以外は何もしない (par-)mapN関数を提供します。
+
+```scala
+(ia, ib).parTupled         // 1
+(ia, ib, ic).parTupled     // 2
+(ia, ib, ic, id).parTupled // 3
+                       ... // 4
+```
+
+1. 2つのIO -> Tuple2のIO：(IO[A], IO[B]) => IO[(A, B)]
+2. 3つのIO -> Tuple3のIO: (IO[A], IO[B], IO[C]) => IO[(A, B, C)].
+3. 4つのIO -> Tuple4のIO: (IO[A], IO[B], IO[C], IO[D]) => IO[(A, B, C, D)]
+4. ...
+
+ですから、上記のエラー処理の例は、こう書くことができます。
+
+```scala
+val e1 = (ok, ko1).parTupled.void
+```
+
+##  3.5. parTraverse
+
+parTraverseはtraverseの並列版であり，両者とも型シグネチャを持つ．
+
+```scala
+F[A] => (A => G[B]) => G[F[B]]
+```
+
+例えば、FをList、GをIOとすると、(par)traverseは、関数A => IO[B]が与えられたときにIO[List[B]]に変換する関数です．
+
+```scala
+List[A] => (A => IO[B]) => IO[List[B]]
+```
+
+(par)traverseの最も一般的な使用例は、行うべき仕事のコレクションがあり、その仕事の1単位を処理する関数がある場合である。そして、結果のコレクションを1つの効果にまとめることができます
+
+```scala
+val work: List[WorkUnit] = ???
+def doWork(workUnit: WorkUnit): IO[Result] = ??? // 1
+val results: IO[List[Result]] = work.parTraverse(doWork)
+```
+
+1. なお、1単位の仕事を処理することが効果であり、この場合、IOである。
+
+デバッグコンビネータを使って、parTraverse を使用したときの実行をよく見てみましょう。
+
+```scala
+object ParTraverse extends IOApp:
+
+  override def run(args: List[String]): IO[ExitCode] =
+    tasks
+      .parTraverse(task) // 1
+      .debug // 2
+      .as(ExitCode.Success)
+
+  val numTasks = 100
+  val tasks: List[Int] = List.range(0, numTasks)
+
+  def task(id: Int): IO[Int] = IO(id).debug
+```
+
+1. タスクの各 Int はタスクメソッドにより IO[Int] に変換され，並列に実行される．
+2. 各タスク効果、最終結果効果にデバッグコンビネータを使用しています。
+
+```shell
+[info] [io-compute-3] 91
+[info] [io-compute-8] 90
+[info] [io-compute-1] 92
+[info] [io-compute-5] 81
+[info] [io-compute-4] 93
+[info] [io-compute-4] 94
+[info] [io-compute-7] 96
+[info] [io-compute-6] 98
+[info] [io-compute-8] 97
+[info] [io-compute-2] 95
+[info] [io-compute-1] 99
+[info] [io-compute-1] List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99)
+```
+
+すべての結果が並列に計算される場合、返されたIO[List[B]]で作られる結果のList[B]はどのようになるのでしょうか？
+
+IO[List[B]]型の結果を出すということは、それぞれのBが独立に計算されているにもかかわらず、返されたIOがすべての結果-List[B]-を集めている必要があることを意味します。
+
+すべての要素が走査されるまで待つ必要があるが，最初の結果が計算されるのを待ち，2番目の結果が計算されたらそれを追加する，というように，返されたList[B]をインクリメンタルに構築することができる．
+とはいえ，parTraverse は実際には traverse の観点から書かれており，すべての IO を IO.Par に変換するものです．traverseはエフェクトがApplicativeのインスタンスを持っていればよいので，Applicative[IO.Par]は並列処理が「起こる」場所です．
+
+### 3.5.1. parTraverseの別の見方
+
+また，(par)mapN のバリエーションとして，(par)traverse を考えることができますが，すべての入力効果は同じ出力型を持ちます．
+
+```scala
+def f(i: Int): IO[Int] = IO(i)
+
+(f(1), f(2)).parMapN((a, b) => List(a, b))                         // IO[List[Int]] 1
+(f(1), f(2), f(3)).parMapN((a, b, c) => List(a, b, c))             // IO[List[Int]] 2
+(f(1), f(2), f(3), f(4)).parMapN((a, b, c, d) => List(a, b, c, d)) // IO[List[Int]] 3
+List(1, 2, 3, 4).parTraverse(f)                                    // IO[List[Int]] 4
+```
+
+1. f(1),f(2)を計算し、その結果をListにまとめる。
+2. f(1),f(2),f(3)を計算し、その結果をListにまとめる。
+3. f(1), f(2), f(3), f(4)を計算し、その結果をListにまとめる。
+4. List(1, 2, 3, 4).parTraverse(f) は (f(1), f(2), f(3), f(4)).parMapN(...) と同じ意味です．
+
+これらの式の戻り値はすべて同じIO[List[Int]]であることに注意してください。
+
+## 3.6. parSequence
+
+(パー)シーケンスは入れ子構造を "裏返し "にする。
+
+```scala
+F[G[A]] => G[F[A]]
+```
+
+例えば、IO エフェクトのリストがある場合、parSequence は、並行して、それを 1 つの IO エフェクトに変換し、出力のリストを生成します。
+
+```scala
+List[IO[A]] => IO[List[A]]
+```
+
+それでは、parSequenceを実際に見てみましょう。
+
+```scala
+object ParSequence extends IOApp:
+
+  override def run(args: List[String]): IO[ExitCode] =
+    tasks
+      .parSequence // 1
+      .debug // 2
+      .as(ExitCode.Success)
+
+  val numTasks = 100
+  val tasks: List[IO[Int]] = List.tabulate(numTasks)(task)
+
+  def task(id: Int): IO[Int] = IO(id).debug // 2
+```
+
+1. タスクの各IO[Int]を並列に実行する。
+2. 各タスク効果、最終結果効果にデバッグコンビネータを使用しています。
+
+ParSequenceプログラムを実行すると、生成されます。
+
+```shell
+[info] [io-compute-7] 89
+[info] [io-compute-4] 88
+[info] [io-compute-5] 92
+[info] [io-compute-8] 91
+[info] [io-compute-4] 93
+[info] [io-compute-8] 94
+[info] [io-compute-7] 95
+[info] [io-compute-2] 96
+[info] [io-compute-5] 97
+[info] [io-compute-6] 98
+[info] [io-compute-1] 99
+[info] [io-compute-3] List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99)
+```
+
+SequenceとTraverseは相互に定義可能であることに注意： x.sequence は x.traverse(identity) であり， x.traverse(f) は x.map(f).sequence である．
+
+
+## 3.7. まとめ
+
+1. IOはMonadであるため、並列演算そのものをサポートしていない。
+2. Parallel型クラスは，一対の効果型の間の変換を指定する． 1つはモナドで、もう1つはアプリケーティブ「だけ」である。
+3. Parallel[IO]は、IOエフェクトとその並列対応であるIO.Parを接続します。
+4. 並列IOの構成には、現在のExecutionContext内の他のスレッドに計算をシフトする機能が必要です。これが並列性の「実装」方法です。
+5. parMapN, parTraverse, parSequence は，(順次) mapN, traverse, sequence の並列版です．エラーはフェイルファスト方式で管理されます．
+
