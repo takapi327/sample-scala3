@@ -674,7 +674,6 @@ ParSequenceプログラムを実行すると、生成されます。
 
 SequenceとTraverseは相互に定義可能であることに注意： x.sequence は x.traverse(identity) であり， x.traverse(f) は x.map(f).sequence である．
 
-
 ## 3.7. まとめ
 
 1. IOはMonadであるため、並列演算そのものをサポートしていない。
@@ -682,4 +681,3 @@ SequenceとTraverseは相互に定義可能であることに注意： x.sequenc
 3. Parallel[IO]は、IOエフェクトとその並列対応であるIO.Parを接続します。
 4. 並列IOの構成には、現在のExecutionContext内の他のスレッドに計算をシフトする機能が必要です。これが並列性の「実装」方法です。
 5. parMapN, parTraverse, parSequence は，(順次) mapN, traverse, sequence の並列版です．エラーはフェイルファスト方式で管理されます．
-
