@@ -352,3 +352,6 @@ object ResourceApp extends IOApp:
 
 1. Resourceデータ型は、状態を取得するコードと解除するコードを分離したパターンを捕捉します。Resourceは、他のResource値に直列に、または並列に合成することができる。
 2. アプリケーションの依存関係のライフサイクルを表現するために、Resource を使用することができます。そして、IOApp でそれらを使って、依存するコードの実行中にそれらを取得し、それらが解放されるようにします。
+
+[メモ]
+Exercise 7: Early-release of Resourcesの問題を使う
