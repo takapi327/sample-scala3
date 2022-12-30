@@ -61,6 +61,30 @@ lazy val libraryUtil = (project in file("modules/library-util"))
     )
   )
 
+lazy val lepusAuth = (project in file("app/lepus-auth"))
+  .settings(name := "lepus-auth")
+  .settings(
+    scalaVersion := "3.2.0",
+    run / fork := true,
+    javaOptions ++= Seq(
+      "-Dconfig.file=conf/env.dev/application.conf",
+      "-Dlogback.configurationFile=conf/env.dev/logback.xml"
+    ),
+    scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-feature",
+      "utf8",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    libraryDependencies ++= Seq(
+      "com.auth0" % "mvc-auth-commons" % "1.9.3",
+      "com.nimbusds" % "oauth2-oidc-sdk" % "10.4"
+    )
+  )
+  .enablePlugins(Lepus)
+
 lazy val commonSettings = Seq(
   run / fork := true,
 
