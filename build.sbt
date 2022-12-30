@@ -8,6 +8,7 @@ lazy val doobieVersion = "1.0.0-RC1"
 lazy val catsVersion   = "2.6.1"
 lazy val effVersion    = "5.21.0"
 lazy val http4sVersion = "0.23.6"
+lazy val jjwtVersion   = "0.11.5"
 
 lazy val root = (project in file("."))
   .settings(
@@ -18,6 +19,9 @@ lazy val root = (project in file("."))
       "com.google.inject" %  "guice"                % "5.1.0",
       "mysql"             %  "mysql-connector-java" % "8.0.26",
       "com.novocode"      %  "junit-interface"      % "0.11" % "test",
+      "io.jsonwebtoken"   %  "jjwt-api"             % jjwtVersion,
+      "io.jsonwebtoken"   %  "jjwt-impl"            % jjwtVersion % "runtime",
+      "io.jsonwebtoken"   %  "jjwt-jackson"         % jjwtVersion,
       "org.tpolecat"      %% "doobie-core"          % doobieVersion,
       "org.typelevel"     %% "cats-core"            % catsVersion,
       "co.fs2"            %% "fs2-core"             % "3.1.3",

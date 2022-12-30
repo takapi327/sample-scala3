@@ -31,8 +31,14 @@ import cats.implicits.*
   println(ohNoesFuture)
 
 object HelloWold extends IOApp:
+
+  val test1 = IO.delay(println("Hello world"))
+  val test2 = IO.pure(println("Hello world"))
+  val iOError = IO.raiseError(new RuntimeException("IO Error"))
   def run(args: List[String]): IO[ExitCode] =
-    tickingClock.as(ExitCode.Success)
+    //tickingClock.as(ExitCode.Success)
+    //IO.raiseError(new RuntimeException("IO Error")).as(ExitCode.Success)
+    iOError.adaptError(t => new IllegalArgumentException(t)).as(ExitCode.Success)
 
   def tickingClock: IO[Unit] =
     for
