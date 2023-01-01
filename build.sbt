@@ -84,7 +84,8 @@ lazy val lepusAuth = (project in file("app/lepus-auth"))
     ),
     libraryDependencies ++= Seq(
       "com.auth0" % "mvc-auth-commons" % "1.9.3",
-      "com.nimbusds" % "oauth2-oidc-sdk" % "10.4"
+      "com.nimbusds" % "oauth2-oidc-sdk" % "10.4",
+      "io.chrisdavenport" %% "mapref" % "0.2.1",
     )
   )
   .enablePlugins(Lepus)
