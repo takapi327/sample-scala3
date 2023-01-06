@@ -86,9 +86,37 @@ lazy val lepusAuth = (project in file("app/lepus-auth"))
       "com.auth0" % "mvc-auth-commons" % "1.9.3",
       "com.nimbusds" % "oauth2-oidc-sdk" % "10.4",
       "io.chrisdavenport" %% "mapref" % "0.2.1",
+      "ch.qos.logback" % "logback-classic" % "1.4.5",
+      "io.jsonwebtoken" % "jjwt-api" % jjwtVersion,
+      lepusLogger
     )
   )
   .enablePlugins(Lepus)
+
+val v = "0.23.11-1437-17c0c99-20230106T064312Z-SNAPSHOT"
+lazy val http4sExample = (project in file("app/http4s-example"))
+  .settings(name := "http4s-example")
+  .settings(
+    scalaVersion := "3.2.0",
+    run / fork := true,
+    javaOptions ++= Seq(
+      "-Dconfig.file=conf/env.dev/application.conf",
+      "-Dlogback.configurationFile=conf/env.dev/logback.xml"
+    ),
+    scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-feature",
+      "utf8",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.4.5",
+      "org.http4s" %% "http4s-dsl" % v,
+      "org.http4s" %% "http4s-ember-server" % v,
+    )
+  )
 
 lazy val commonSettings = Seq(
   run / fork := true,
