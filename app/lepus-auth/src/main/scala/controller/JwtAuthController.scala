@@ -43,12 +43,8 @@ class JwtAuthController @Inject() (
           "userName" -> result.getStringClaim("name"),
           "userEmail" -> result.getStringClaim("email")
         )
-        val response = Response[IO](status = Found, headers = Headers(Location(uri"hello")))
+        Response[IO](status = Found, headers = Headers(Location(uri"hello")))
           .addCookie(cookie)
-
-        println(response.headers.headers)
-
-        response
       else
         Response(Unauthorized)
 
