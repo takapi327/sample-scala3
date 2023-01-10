@@ -1,6 +1,6 @@
 .bsp
 .idea
-project/
+metals.sbt
 target/
 .DS_Store
 .metals/
