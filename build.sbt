@@ -118,6 +118,22 @@ lazy val http4sExample = (project in file("app/http4s-example"))
     )
   )
 
+lazy val ldbc = (project in file("modules/ldbc"))
+  .settings(name := "ldbc")
+  .settings(scalaVersion := "3.2.0")
+  .settings(
+    scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-feature",
+      "utf8",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    resolvers += "Lepus Maven" at "s3://com.github.takapi327.s3-ap-northeast-1.amazonaws.com/lepus/",
+    libraryDependencies ++= Seq(lepusCore)
+  )
+
 lazy val commonSettings = Seq(
   run / fork := true,
 
