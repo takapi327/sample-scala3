@@ -131,7 +131,11 @@ lazy val ldbc = (project in file("modules/ldbc"))
       "-language:implicitConversions"
     ),
     resolvers += "Lepus Maven" at "s3://com.github.takapi327.s3-ap-northeast-1.amazonaws.com/lepus/",
-    libraryDependencies ++= Seq(lepusCore)
+    libraryDependencies ++= Seq(
+      lepusCore,
+      "org.typelevel" %% "cats-effect" % "3.4.4",
+      "mysql" %  "mysql-connector-java" % "8.0.26"
+    )
   )
 
 lazy val commonSettings = Seq(
