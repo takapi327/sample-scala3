@@ -134,7 +134,8 @@ lazy val ldbc = (project in file("modules/ldbc"))
     libraryDependencies ++= Seq(
       lepusCore,
       "org.typelevel" %% "cats-effect" % "3.4.4",
-      "mysql" %  "mysql-connector-java" % "8.0.26"
+      "mysql" %  "mysql-connector-java" % "8.0.26",
+      "com.softwaremill.magnolia1_3" %% "magnolia" % "1.2.6"
     )
   )
 
