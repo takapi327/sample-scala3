@@ -135,7 +135,9 @@ lazy val ldbc = (project in file("modules/ldbc"))
       lepusCore,
       "org.typelevel" %% "cats-effect" % "3.4.4",
       "mysql" %  "mysql-connector-java" % "8.0.26",
-      "com.softwaremill.magnolia1_3" %% "magnolia" % "1.2.6"
+      "com.softwaremill.magnolia1_3" %% "magnolia" % "1.2.6",
+      "org.specs2" %% "specs2-core" % "5.2.0" % Test,
+      "org.specs2" %% "specs2-junit" % "5.2.0" % Test
     )
   )
 
