@@ -9,12 +9,20 @@ trait Column[F[_]]:
 
   def `type`: Column.Type
 
+  def options: Seq[ColumnOption]
+
   def loader: ResultSetLoader[F, ThisType]
 
   final def get(resultSet: ResultSet[F]): F[ThisType] =
     resultSet.get[ThisType](label)(using loader)
 
-  override def toString: String = s"$label ${`type`}"
+  def isOptional: Boolean = loader.isOptional
+
+  def columnQuery: String =
+    s"`$label` ${`type`} ${if isOptional then "DEFAULT NULL" else "NOT NULL"}" ++
+      (if options.nonEmpty then s"${options.mkString(" ", " ", "")}" else "")
+
+  override def toString: String = columnQuery
 
 object Column:
 
@@ -127,8 +135,8 @@ object Column:
       s"TINYTEXT $c"
     )
 
-  case class Text(length: Int, character: Option[Character]) extends TextType:
-    override def toString: String = character.fold(s"TEXT($length)")(c =>
+  case class Text(character: Option[Character]) extends TextType:
+    override def toString: String = character.fold(s"TEXT")(c =>
       s"TEXT $c"
     )
 
@@ -142,11 +150,38 @@ object Column:
       s"LONGTEXT $c"
     )
 
-  case class Enum(values: cats.data.NonEmptyList[String]) extends Type:
+  case class Enum(values: List[String]) extends Type:
 
-    override def toString: String = s"ENUM(${values.toList.map(str => s"'$str'").mkString(",")})"
+    override def toString: String = s"ENUM(${values.map(str => s"'$str'").mkString(",")})"
 
-  case class CSet(values: cats.data.NonEmptyList[String], character: Option[Character]) extends Type:
-    override def toString: String = character.fold(s"SET(${values.toList.map(str => s"'$str'").mkString(",")})")(c =>
-      s"SET(${values.toList.map(str => s"'$str'").mkString(",")}) $c"
+  case class CSet(values: List[String], character: Option[Character]) extends Type:
+    override def toString: String = character.fold(s"SET(${values.map(str => s"'$str'").mkString(",")})")(c =>
+      s"SET(${values.map(str => s"'$str'").mkString(",")}) $c"
     )
+
+//enum ColumnOption(name: String, columns: String*):
+//  case AutoInc extends ColumnOption("AUTO_INCREMENT")
+//  case PrimaryKey extends ColumnOption("PRIMARY KEY")
+//  case Unique extends ColumnOption("UNIQUE")
+//
+//  override def toString: String = name
+
+trait ColumnOption:
+  def name: String
+
+object ColumnOption:
+
+  case object AutoInc extends ColumnOption:
+    override def name: String = "AUTO_INCREMENT"
+
+    override def toString: String = name
+
+  case class PrimaryKey(columns: String*) extends ColumnOption:
+    override def name: String = "PRIMARY KEY" ++ (if columns.nonEmpty then s" (${columns.mkString(", ")})" else "")
+
+    override def toString: String = name
+
+  case class Unique(columns: String*) extends ColumnOption:
+    override def name: String = "UNIQUE" ++ (if columns.nonEmpty then s" (${columns.mkString(", ")})" else "")
+
+    override def toString: String = name
