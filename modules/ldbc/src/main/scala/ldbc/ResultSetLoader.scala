@@ -3,14 +3,14 @@ package ldbc
 
 import java.sql.{Date, SQLWarning, Time, Timestamp}
 import java.io.{InputStream, Reader}
+
 import cats.implicits.*
 import cats.effect.Sync
-import example.Main.Tuples.IndexOf
-
-import scala.Tuple.Elem
 
 trait ResultSetLoader[F[_], A]:
   self =>
+
+  def isOptional: Boolean = false
 
   def load(resultSet: ResultSet[F], columnLabel: String): F[A]
 
@@ -39,15 +39,11 @@ object ResultSetLoader:
   given [F[_]]: ResultSetLoader[F, BigDecimal]  = ResultSetLoader(_.getBigDecimal)
 
   given [F[_]: Sync, A](using loader: ResultSetLoader[F, A]): ResultSetLoader[F, Option[A]] with
+
+    override def isOptional: Boolean = true
+
     override def load(resultSet: ResultSet[F], columnLabel: String): F[Option[A]] =
       for
         result <- loader.load(resultSet, columnLabel)
         bool   <- resultSet.wasNull()
       yield if bool then None else Some(result)
-
-  import scala.deriving.Mirror
-  import example.Main.Tuples
-  given [F[_]: Sync, T <: Product, Tag <: Singleton](using mirror: Mirror.ProductOf[T], loader: ResultSetLoader[F, Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
-  ): ResultSetLoader[F, Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] with
-    override def load(resultSet: ResultSet[F], columnLabel: String): F[Elem[mirror.MirroredElemTypes, IndexOf[mirror.MirroredElemLabels, Tag]]] =
-      loader.load(resultSet, columnLabel)
