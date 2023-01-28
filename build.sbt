@@ -14,6 +14,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "sample-scala3",
     commonSettings,
+    resolvers += "Lepus Maven" at "s3://com.github.takapi327.s3-ap-northeast-1.amazonaws.com/lepus/",
     libraryDependencies ++= Seq(
       "org.typelevel"     %% "cats-effect"          % "3.3.3",
       "com.google.inject" %  "guice"                % "5.1.0",
@@ -22,18 +23,18 @@ lazy val root = (project in file("."))
       "io.jsonwebtoken"   %  "jjwt-api"             % jjwtVersion,
       "io.jsonwebtoken"   %  "jjwt-impl"            % jjwtVersion % "runtime",
       "io.jsonwebtoken"   %  "jjwt-jackson"         % jjwtVersion,
-      "org.tpolecat"      %% "doobie-core"          % doobieVersion,
       "org.typelevel"     %% "cats-core"            % catsVersion,
       "co.fs2"            %% "fs2-core"             % "3.1.3",
       "org.http4s"        %% "http4s-dsl"           % http4sVersion,
       "org.http4s"        %% "http4s-blaze-server"  % http4sVersion,
       "org.http4s"        %% "http4s-blaze-client"  % http4sVersion,
       "org.http4s"        %% "http4s-circe"         % http4sVersion,
-      "org.http4s"        %% "http4s-ember-server"  % "0.23.14"
+      "org.http4s"        %% "http4s-ember-server"  % "0.23.14",
+      lepusDoobie
     )
   )
-  .aggregate(libraryRds, libraryUtil)
-  .dependsOn(libraryRds, libraryUtil)
+  //.aggregate(libraryRds, libraryUtil)
+  //.dependsOn(libraryRds, libraryUtil)
 
 lazy val libraryRds = (project in file("modules/library-rds"))
   .settings(
