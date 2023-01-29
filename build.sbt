@@ -29,12 +29,11 @@ lazy val root = (project in file("."))
       "org.http4s"        %% "http4s-blaze-server"  % http4sVersion,
       "org.http4s"        %% "http4s-blaze-client"  % http4sVersion,
       "org.http4s"        %% "http4s-circe"         % http4sVersion,
-      "org.http4s"        %% "http4s-ember-server"  % "0.23.14",
-      lepusDoobie
+      "org.http4s"        %% "http4s-ember-server"  % "0.23.14"
     )
   )
-  //.aggregate(libraryRds, libraryUtil)
-  //.dependsOn(libraryRds, libraryUtil)
+  .aggregate(libraryRds, libraryUtil)
+  .dependsOn(libraryRds, libraryUtil)
 
 lazy val libraryRds = (project in file("modules/library-rds"))
   .settings(
@@ -137,8 +136,9 @@ lazy val ldbc = (project in file("modules/ldbc"))
       "org.typelevel" %% "cats-effect" % "3.4.4",
       "mysql" %  "mysql-connector-java" % "8.0.26",
       "com.softwaremill.magnolia1_3" %% "magnolia" % "1.2.6",
-      "org.specs2" %% "specs2-core" % "5.2.0" % Test,
-      "org.specs2" %% "specs2-junit" % "5.2.0" % Test
+      //"org.specs2" %% "specs2-core" % "5.2.0" % Test,
+      //"org.specs2" %% "specs2-junit" % "5.2.0" % Test,
+      lepusDoobie
     )
   )
 
