@@ -1,8 +1,9 @@
 
 package ldbc
 
-import java.sql.{Date, SQLWarning, Time, Timestamp}
-import java.io.{InputStream, Reader}
+import java.io.{ InputStream, Reader }
+import java.sql.{ Date, SQLWarning, Time, Timestamp }
+import java.time.LocalDateTime
 
 import cats.implicits.*
 import cats.effect.Sync
@@ -37,6 +38,12 @@ object ResultSetLoader:
   given [F[_]]: ResultSetLoader[F, Object]      = ResultSetLoader(_.getObject)
   given [F[_]]: ResultSetLoader[F, Reader]      = ResultSetLoader(_.getCharacterStream)
   given [F[_]]: ResultSetLoader[F, BigDecimal]  = ResultSetLoader(_.getBigDecimal)
+
+  given [F[_]: Sync](using loader: ResultSetLoader[F, Timestamp]): ResultSetLoader[F, LocalDateTime] with
+    override def load(resultSet: ResultSet[F], columnLabel: String): F[LocalDateTime] =
+      for
+        result <- loader.load(resultSet, columnLabel)
+      yield result.toLocalDateTime
 
   given [F[_]: Sync, A](using loader: ResultSetLoader[F, A]): ResultSetLoader[F, Option[A]] with
 
