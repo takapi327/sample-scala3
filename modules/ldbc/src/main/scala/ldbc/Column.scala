@@ -9,7 +9,7 @@ trait Column[F[_]]:
 
   def `type`: Column.Type
 
-  def options: Seq[ColumnOption]
+  def options: Seq[ColumnOption.Key]
 
   def loader: ResultSetLoader[F, ThisType]
 
@@ -20,7 +20,7 @@ trait Column[F[_]]:
 
   def columnQuery: String =
     s"`$label` ${`type`} ${if isOptional then "DEFAULT NULL" else "NOT NULL"}" ++
-      (if options.nonEmpty then s"${options.mkString(" ", " ", "")}" else "")
+      (if options.exists(_ != ColumnOption.Key.PrimaryKey) then s"${options.filter(_ != ColumnOption.Key.PrimaryKey).mkString(" ", " ", "")}" else "")
 
   override def toString: String = columnQuery
 
@@ -159,17 +159,17 @@ object Column:
       s"SET(${values.map(str => s"'$str'").mkString(",")}) $c"
     )
 
-//enum ColumnOption(name: String, columns: String*):
-//  case AutoInc extends ColumnOption("AUTO_INCREMENT")
-//  case PrimaryKey extends ColumnOption("PRIMARY KEY")
-//  case Unique extends ColumnOption("UNIQUE")
-//
-//  override def toString: String = name
-
 trait ColumnOption:
   def name: String
 
 object ColumnOption:
+
+  enum Key(name: String):
+    case AutoInc extends Key("AUTO_INCREMENT")
+    case PrimaryKey extends Key("PRIMARY KEY")
+    case Unique extends Key("UNIQUE KEY")
+
+    override def toString: String = name
 
   case object AutoInc extends ColumnOption:
     override def name: String = "AUTO_INCREMENT"
@@ -177,11 +177,11 @@ object ColumnOption:
     override def toString: String = name
 
   case class PrimaryKey(columns: String*) extends ColumnOption:
-    override def name: String = "PRIMARY KEY" ++ (if columns.nonEmpty then s" (${columns.mkString(", ")})" else "")
+    override def name: String = "PRIMARY KEY" ++ (if columns.nonEmpty then s" (${columns.map(c => s"`$c`").mkString(", ")})" else "")
 
     override def toString: String = name
 
   case class Unique(columns: String*) extends ColumnOption:
-    override def name: String = "UNIQUE" ++ (if columns.nonEmpty then s" (${columns.mkString(", ")})" else "")
+    override def name: String = "UNIQUE KEY" ++ (if columns.nonEmpty then s" (${columns.map(c => s"`$c`").mkString(", ")})" else "")
 
     override def toString: String = name
