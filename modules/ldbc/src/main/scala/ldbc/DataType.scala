@@ -24,7 +24,7 @@ object DataType:
     def setCollate(collate: String): Character =
       this.copy(charset, Some(collate))
 
-  sealed trait IntegerType[T <: Byte | Short | Int | Long | Float | Double | BigDecimal] extends DataType[T]:
+  sealed trait IntegerType[T <: Byte | Short | Int | Long | Float | Double | BigDecimal | Any] extends DataType[T]:
     def length: Int
     def default: Option[Default]
   sealed trait IntegerOptType[T <: Option[Byte | Short | Int | Long | Float | Double | BigDecimal]] extends DataType[T]:
@@ -62,9 +62,15 @@ object DataType:
     override def columQuery: String = s"BIT($length) $nullType" ++ default.fold("")(v => s" ${v.queryString}")
     def DEFAULT(value: T): BitOpt[T] = this.copy(length, Some(DefaultValue(value)))
 
-  case class Tinyint[T <: Byte](length: Int, default: Option[Default]) extends IntegerType[T]:
-    override def columQuery: String = s"TINYINT($length) $nullType" ++ default.fold("")(v => s" ${v.queryString}")
+  case class Tinyint[T <: Byte | Any](length: Int, default: Option[Default], autoInc: Option[AutoInc]) extends IntegerType[T]:
+    override def columQuery: String = s"TINYINT($length) $nullType" ++ default.fold("")(v => s" ${v.queryString}") ++ autoInc.fold("")(v => s" ${v.queryString}")
     def DEFAULT(value: T): Tinyint[T] = this.copy(length, Some(DefaultValue(value)))
+
+    def AUTO_INCREMENT(key: AutoInc.Key): Tinyint[T] = this.copy(autoInc = Some(AutoInc(Some(key))))
+
+    def updateAutoInc(autoInc: Option[AutoInc]): DataType[T] =
+      this.copy(autoInc = autoInc)
+
   case class TinyintOpt[T <: Option[Byte]](length: Int, default: Option[Default]) extends IntegerOptType[T]:
     override def columQuery: String = s"TINYINT($length) $nullType" ++ default.fold("")(v => s" ${v.queryString}")
     def DEFAULT(value: T): TinyintOpt[T] = this.copy(length, Some(DefaultValue(value)))
