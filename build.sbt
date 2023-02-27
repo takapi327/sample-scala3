@@ -118,6 +118,26 @@ lazy val http4sExample = (project in file("app/http4s-example"))
     )
   )
 
+lazy val ldbcExample = (project in file("app/ldbc-example"))
+  .settings(name := "ldbc-example")
+  .settings(
+    scalaVersion := "3.2.0",
+    run / fork := true,
+    scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-feature",
+      "utf8",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    libraryDependencies ++= Seq(
+      "com.github.takapi327" %% "ldbc-dsl-io" % "0.1.0-SNAPSHOT",
+      "mysql" % "mysql-connector-java" % "8.0.32"
+    )
+  )
+
+
 lazy val ldbc = (project in file("modules/ldbc"))
   .settings(name := "ldbc")
   .settings(scalaVersion := "3.2.0")
