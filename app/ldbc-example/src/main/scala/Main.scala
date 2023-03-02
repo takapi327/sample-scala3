@@ -29,7 +29,7 @@ object Main extends IOApp:
     createdAt: LocalDateTime
   )
 
-  val table: Table[User] = Table[User]("user")(
+  private val table: Table[User] = Table[User]("user")(
     column("id", BIGINT(64), AUTO_INCREMENT, PRIMARY_KEY),
     column("name", VARCHAR(255)),
     column("age", INT(255).DEFAULT_NULL),
@@ -47,10 +47,9 @@ object Main extends IOApp:
     yield User(id, name, age, updatedAt, createdAt)
 
   override def run(args: List[String]): IO[ExitCode] =
-    val id = 1
     (for
-    //updated <- sql"INSERT INTO user (id, name, age) VALUES ($None, 'test', $None)".update()
-      user <- sql"SELECT * FROM user WHERE id = $id".query
+      //updated <- sql"INSERT INTO user (id, name, age) VALUES ($None, 'test', $None)".update()
+      user <- (sql"SELECT * FROM user" ++ sql"WHERE id = ${ 1 }").query
     yield
       //println(updated)
       println(user)
