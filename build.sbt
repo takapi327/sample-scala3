@@ -137,6 +137,25 @@ lazy val ldbcExample = (project in file("app/ldbc-example"))
     )
   )
 
+lazy val slick3Example = (project in file("app/slick3-example"))
+  .settings(name := "slick3-example")
+  .settings(
+    scalaVersion := "3.2.0",
+    run / fork := true,
+    scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-feature",
+      "utf8",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions"
+    ),
+    libraryDependencies ++= Seq(
+      ("com.typesafe.slick" %% "slick" % "3.4.0-SNAPSHOT").cross(CrossVersion.for3Use2_13),
+      "mysql" % "mysql-connector-java" % "8.0.32"
+    )
+  )
+
 
 lazy val ldbc = (project in file("modules/ldbc"))
   .settings(name := "ldbc")
