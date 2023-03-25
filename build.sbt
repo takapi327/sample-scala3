@@ -151,9 +151,9 @@ lazy val slick3Example = (project in file("app/slick3-example"))
       "-language:implicitConversions"
     ),
     libraryDependencies ++= Seq(
-      "com.typesafe.slick" %% "slick" % "3.5.0-pre.70.1363344d.dirty",
+      "com.typesafe.slick" %% "slick" % "3.5.0-pre.71.7c7e79ee.dirty",
       "mysql" % "mysql-connector-java" % "8.0.32",
-      "ch.qos.logback" % "logback-classic" % "1.4.6"
+      "ch.qos.logback" % "logback-classic" % "1.4.5"
     )
   )
 
