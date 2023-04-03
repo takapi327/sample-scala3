@@ -14,7 +14,7 @@ case classのモデルとTableで定義されたカラムの型が一致して�
 case class User(
   id:   String,
   name: String,
-  age:  Option[Int],
+  age:  Option[Int]
 )
 
 class UserTable(tag: Tag) extends Table[User](tag, "user"):
