@@ -155,9 +155,66 @@ private[ldbc] trait Table[P <: Product] extends Dynamic:
 
 # テーブル
 
-テーブル定義はProductの境界を持った型パラメータを受け取り、DynamicのselectDynamicメソッドを使用してしてしたカラムの情報を取得できるようにしておく
+テーブル定義は以下の機能を使って実装する
+- Tuple
+Tuple.MapなどでTupleの型を変換する
+- Mirror
+MirroredElemTypesでモデルのプロパティ型を取得する
+- Dynamic
+動的なメソッドを追加してカラム情報にアクセスできるようにする
 
 ---
+
+# Dynamic
+
+ScalaのDynamicは、コードを書くときに変数やメソッドの型を宣言する必要がないという機能です。
+
+例えば、以下のようなコードがあったとします。
+
+```scala
+val x = 10
+val y = "Hello"
+```
+
+この場合、変数xはInt型であり、変数yはString型です。しかし、Dynamicを使うと、型宣言を省略できます。
+
+---
+
+```scala
+import scala.language.dynamics
+
+class MyDynamic extends Dynamic {
+  def selectDynamic(name: String): String = s"Hello, $name!"
+}
+
+val myDynamic = new MyDynamic
+println(myDynamic.world) // "Hello, world!"
+```
+
+この例では、MyDynamicクラスがDynamicトレイトを実装しています。selectDynamicメソッドをオーバーライドすることで、クラスに動的なメソッドを追加することができます。selectDynamicメソッドは、String型の引数を受け取り、String型の結果を返します。
+
+---
+
+また、動的なオブジェクトに対してメソッドを呼び出すこともできます。
+
+```scala
+import scala.language.dynamics
+
+class MyDynamic extends Dynamic {
+  def applyDynamic(name: String)(args: Any*): String =
+    s"Calling method $name with arguments (${args.mkString(", ")})"
+}
+
+val myDynamic = new MyDynamic
+println(myDynamic.sayHello("Alice", "Bob"))
+// "Calling method sayHello with arguments (Alice, Bob)"
+
+```
+この例では、MyDynamicクラスがapplyDynamicメソッドをオーバーライドしています。applyDynamicメソッドは、String型のnameと、可変長引数のargsを受け取り、String型の結果を返します。
+
+---
+
+# テーブル
 
 Tableを継承したモデルを定義しておく
 引数のcolumnsは、Tuple.Mapを使用して型パラメーターのTupleをColumn型で受け取るようにしている
@@ -173,6 +230,12 @@ object Table extends Dynamic:
     keyDefinitions: Seq[Key]
   ) extends Table[P]:
 
+    ...
+```
+
+---
+
+```scala
     override def selectDynamic[Tag <: Singleton](
       tag: Tag
     )(using
@@ -182,6 +245,50 @@ object Table extends Dynamic:
       columns
         .productElement(index.value)
         .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
+```
+
+---
+
+Singleton型を使用することで、特定の値を持つ唯一の型を表すことができるようになる
+
+```scala
+def single[Tag <: Singleton](x: Tag): Tag = x
+
+val x = single("hello world")
+// val x: String = hello world
+
+val x = single[String]("hello world") // エラー
+val x = single["hello world"]("hello world") // ok
+val x = single[Singleton & String]("hello world") // ok
+
+```
+
+---
+
+MirroredElemLabelsとTagが一致するIndexを生成し、ValueOfで値として扱えるようにする
+
+```scala
+index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+
+...
+
+import scala.compiletime.ops.int.S
+
+object Tuples:
+
+  type IndexOf[T <: Tuple, E] <: Int = T match
+    case E *: _  => 0
+    case _ *: es => S[IndexOf[es, E]]
+```
+---
+
+Tupleであるcolumnsから指定したIndexの値を取得する。
+productElementの戻り値はAnyなため、Tuple.Elemを使用してTupleのIndexに対応した型に変更してあげる
+
+```scala
+columns
+  .productElement(index.value)
+  .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
 ```
 
 ---
