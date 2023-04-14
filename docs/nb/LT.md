@@ -2,7 +2,7 @@
 marp: true
 ---
 
-# tapirのようなものをJDBCで作りたい
+# tapirのようなものをScala3 x JDBCで作りたい
 
 ---
 
@@ -53,8 +53,8 @@ https://github.com/softwaremill/tapir
 # 目指すもの
 
 - 型でしっかりモデリングしてコンパイラで間違いを検出できる
-- 実行するライブラリを切り替えられるようにする
-- テーブル定義からSchemaSPYのドキュメントを自動生成できる
+- テーブル定義からドキュメントを自動生成できる
+- 実行するライブラリを選べるようにする
 
 ---
 
@@ -118,50 +118,16 @@ inline def BIGINT[T <: Long](inline length: Int): Bigint[T] =
 
 # テーブル
 
-```scala
-/** Trait for generating SQL table information.
-  *
-  * @tparam P
-  *   A class that implements a [[Product]] that is one-to-one with the table definition.
-  */
-private[ldbc] trait Table[P <: Product] extends Dynamic:
-
-  /** Table name */
-  private[ldbc] def name: String
-
-  /** Table Key definitions */
-  private[ldbc] def keyDefinitions: Seq[Key]
-
-  /** Methods for statically accessing column information held by a Table.
-    *
-    * @param tag
-    *   A type with a single instance. Here, Column is passed.
-    * @param mirror
-    *   product isomorphism map
-    * @param index
-    *   Position of the specified type in tuple X
-    * @tparam Tag
-    *   Type with a single instance
-    */
-  def selectDynamic[Tag <: Singleton](
-    tag: Tag
-  )(using
-    mirror: Mirror.ProductOf[P],
-    index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
-  ): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
-```
-
----
-
-# テーブル
-
 テーブル定義は以下の機能を使って実装する
 - Tuple
-Tuple.MapなどでTupleの型を変換する
+Tuple.Mapなどでタプルの各メンバの型 T を F[T] に変換する
 - Mirror
-MirroredElemTypesでモデルのプロパティ型を取得する
+モデルとタプルの相互変換を行う
 - Dynamic
 動的なメソッドを追加してカラム情報にアクセスできるようにする
+
+以下を参考にさせていただきました。
+https://speakerdeck.com/phenan/tuples-and-mirrors-in-scala3-and-higher-kinded-data
 
 ---
 
@@ -235,6 +201,8 @@ object Table extends Dynamic:
 
 ---
 
+フィールド名でのアクセスを可能にするためにselectDynamicを実装する
+
 ```scala
     override def selectDynamic[Tag <: Singleton](
       tag: Tag
@@ -268,7 +236,10 @@ val x = single[Singleton & String]("hello world") // ok
 MirroredElemLabelsとTagが一致するIndexを生成し、ValueOfで値として扱えるようにする
 
 ```scala
-index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+override def selectDynamic[Tag <: Singleton](...)(
+  ...
+  index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+):
 
 ...
 
@@ -284,6 +255,8 @@ object Tuples:
 
 Tupleであるcolumnsから指定したIndexの値を取得する。
 productElementの戻り値はAnyなため、Tuple.Elemを使用してTupleのIndexに対応した型に変更してあげる
+
+Tuple.ElemはタプルXの位置Nにある要素の型を取得する型レベル関数
 
 ```scala
 columns
@@ -314,6 +287,8 @@ object Table extends Dynamic:
 
 ---
 
+# インスタンス生成
+
 ```scala
 
 val table: Table[User] = Table[User]("user")(
@@ -324,5 +299,130 @@ val table: Table[User] = Table[User]("user")(
   column("created_at", TIMESTAMP.DEFAULT_CURRENT_TIMESTAMP(true))
 )
 ```
+
+---
+
+# インスタンス生成
+
+モデル <-> テーブルマッピングでパラメーターの数が違っていたり、型が違うとcompileでエラーになる
+
+![w:900](https://user-images.githubusercontent.com/57429437/231989552-7772f3cd-731b-403d-9203-3f0fb404ae39.png)
+
+![w:500](https://user-images.githubusercontent.com/57429437/231989691-7208fac2-c5d7-41cc-a510-44a04ec422f0.png)
+
+---
+
+# インスタンス生成
+
+Scalaの型とDBの型が一致していない場合もcompileでエラーとなる
+
+![w:500](https://user-images.githubusercontent.com/57429437/231990164-63b523cd-44c3-440b-97b3-fbd3deafc57d.png)
+
+データタイプの長さもDBの制限を超えるとcompileでエラーとなる
+
+![w:900](https://user-images.githubusercontent.com/57429437/231990404-50be0339-28d6-4320-82e7-7a5261f49cf2.png)
+
+---
+
+# テーブル定義からドキュメントを自動生成できる
+
+ドキュメント生成はSchemaSpyを使用
+
+---
+
+# SchemaSpy
+
+データベースの情報を元に、ER図やテーブル、カラム一覧などの情報をHTML形式のドキュメントとして出力するツール
+
+---
+
+# SchemaSpy
+
+maven対応していない。。。
+
+しょうがないので、cloneしてゴニョゴニョして使ってたら
+
+---
+
+# SchemaSpy
+
+つい最近maven対応しました！
+
+https://github.com/schemaspy/schemaspy/issues/157
+
+https://central.sonatype.com/artifact/org.schemaspy/schemaspy/6.2.2
+
+
+---
+
+# 実行するライブラリを選べるようにする
+
+- 自作
+- Slick
+
+---
+
+# 自作
+
+フィールド名でのアクセス時にResultSetからカラム名を指定してデータ取得を行うResultSetReaderというものを暗黙的に渡してあげる
+
+```scala
+def applyDynamic[Tag <: Singleton](
+  tag: Tag
+)()(using
+  mirror: Mirror.ProductOf[P],
+  index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]],
+  reader: ResultSetReader[F, Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
+): Kleisli[F, ResultSet[F], Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] =
+  Kleisli { resultSet =>
+    val column = table.selectDynamic[Tag](tag)
+    reader.read(resultSet, column.label)
+  }
+```
+
+---
+
+# 自作
+
+ResultSet -> Userへの変換を行うKleisliを定義してあげる
+
+```scala
+given Kleisli[IO, ResultSet[IO], User] =
+  for
+    id        <- table.id()
+    name      <- table.name()
+    age       <- table.age()
+    status    <- table.status()
+    updatedAt <- table.updatedAt()
+    createdAt <- table.createdAt()
+  yield User(id, name, age, status, updatedAt, createdAt)
+```
+
+---
+
+# 自作
+
+StringContextなどでSQL文を生成して、DataSource -> Connection -> Statement -> ResultSetというようなJDBCの標準的なアクセスを行う (doobieのような感じ)
+
+```scala
+val user: IO[User] = sql"SELECT * FROM user".query.transaction.run(dataSource)
+```
+
+---
+
+# Slick
+
+強く型付けされ、高度に構成可能なAPIを持つ、Scalaのための高度で包括的なデータベースアクセスライブラリ
+
+Scalaのコレクションを扱うようにデータベースを操作することができるのが特徴
+
+
+※ 2023/04時点ではまだScala3対応版はリリースされていない。そのため対応進行中のものをクローンして使っています。
+
+---
+
+# Slick
+
+
 
 ---
