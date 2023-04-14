@@ -155,7 +155,7 @@ private[ldbc] trait Table[P <: Product] extends Dynamic:
 
 # テーブル
 
-テーブル定義はProductの境界を持った型パラメータを受け取り、DynamicのselectDynamicメソッドを使用してしてしたカラムの情報を取得できるようにしておく
+テーブル定義はProductの境界を持った型パラメータを受け取り、DynamicのselectDynamicメソッドを使用してカラムの情報を取得できるようにしておく
 
 ---
 
