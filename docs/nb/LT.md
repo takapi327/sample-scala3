@@ -52,13 +52,13 @@ https://github.com/softwaremill/tapir
 
 # 目指すもの
 
-- 型でしっかりモデリングしてコンパイラで間違いを検出できる
+- 型制御によってコンパイラで間違いを検出できる
 - テーブル定義からドキュメントを自動生成できる
 - 実行するライブラリを選べるようにする
 
 ---
 
-# 型でしっかりモデリングしてコンパイラで間違いを検出できる
+# 型制御によってコンパイラで間違いを検出できる
 
 モデルを使ってTable定義を作成するようにする
 
@@ -118,7 +118,7 @@ inline def BIGINT[T <: Long](inline length: Int): Bigint[T] =
 
 # テーブル
 
-テーブル定義は以下の機能を使って実装する
+テーブル定義はDataType generic programmingを使って実装する
 - Tuple
 Tuple.Mapなどでタプルの各メンバの型 T を F[T] に変換する
 - Mirror
@@ -126,7 +126,8 @@ Tuple.Mapなどでタプルの各メンバの型 T を F[T] に変換する
 - Dynamic
 動的なメソッドを追加してカラム情報にアクセスできるようにする
 
-以下を参考にさせていただきました。
+参考
+DataType generic programming with scala3 <- 直近のScala祭りの発表にあったが資料が見つけられず...
 https://speakerdeck.com/phenan/tuples-and-mirrors-in-scala3-and-higher-kinded-data
 
 ---
@@ -182,6 +183,56 @@ println(myDynamic.sayHello("Alice", "Bob"))
 
 # テーブル
 
+テーブルはselectDynamicでフィールド名でカラム情報にアクセスできるようにしておく
+
+```scala
+private[ldbc] trait Table[P <: Product] extends Dynamic:
+  ...
+  def selectDynamic[Tag <: Singleton](
+    tag: Tag
+  )(using
+    mirror: Mirror.ProductOf[P],
+    index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+  ): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
+```
+
+---
+
+Singleton型を使用することで、特定の値を持つ唯一の型を表すことができるようになる
+
+```scala
+def single[Tag <: Singleton](x: Tag): Tag = x
+
+val x = single("hello world")
+// val x: String = hello world
+
+val x = single[String]("hello world") // エラー
+val x = single["hello world"]("hello world") // ok
+val x = single[Singleton & String]("hello world") // ok
+```
+
+---
+
+MirroredElemLabelsとTagが一致するIndexを生成し、ValueOfで値として扱えるようにする
+
+```scala
+override def selectDynamic[Tag <: Singleton](...)(
+  ...
+  index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+):
+
+...
+
+import scala.compiletime.ops.int.S
+
+object Tuples:
+
+  type IndexOf[T <: Tuple, E] <: Int = T match
+    case E *: _  => 0
+    case _ *: es => S[IndexOf[es, E]]
+```
+---
+
 Tableを継承したモデルを定義しておく
 引数のcolumnsは、Tuple.Mapを使用して型パラメーターのTupleをColumn型で受け取るようにしている
 
@@ -215,42 +266,6 @@ object Table extends Dynamic:
         .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
 ```
 
----
-
-Singleton型を使用することで、特定の値を持つ唯一の型を表すことができるようになる
-
-```scala
-def single[Tag <: Singleton](x: Tag): Tag = x
-
-val x = single("hello world")
-// val x: String = hello world
-
-val x = single[String]("hello world") // エラー
-val x = single["hello world"]("hello world") // ok
-val x = single[Singleton & String]("hello world") // ok
-
-```
-
----
-
-MirroredElemLabelsとTagが一致するIndexを生成し、ValueOfで値として扱えるようにする
-
-```scala
-override def selectDynamic[Tag <: Singleton](...)(
-  ...
-  index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
-):
-
-...
-
-import scala.compiletime.ops.int.S
-
-object Tuples:
-
-  type IndexOf[T <: Tuple, E] <: Int = T match
-    case E *: _  => 0
-    case _ *: es => S[IndexOf[es, E]]
-```
 ---
 
 Tupleであるcolumnsから指定したIndexの値を取得する。
@@ -322,6 +337,23 @@ Scalaの型とDBの型が一致していない場合もcompileでエラーとな
 
 ![w:900](https://user-images.githubusercontent.com/57429437/231990404-50be0339-28d6-4320-82e7-7a5261f49cf2.png)
 
+
+---
+
+DataType generic programmingを使用してモデル -> テーブル定義を作成することができた。
+
+ここで重要な点は、このテーブル定義は何に使用されるかという情報を持っていないこと。
+
+情報を持っていないため、別の何かで使用する時に関係のない情報が邪魔をしない。
+使う側がこのテーブル定義に対して、意味を与えてあげる。
+
+---
+
+今回はこのテーブル定義に以下2つの意味を与えてあげる。
+
+- ドキュメント生成 => テーブル定義からドキュメントを自動生成できる
+- DB接続 => 実行するライブラリを選べるようにする
+
 ---
 
 # テーブル定義からドキュメントを自動生成できる
@@ -336,15 +368,11 @@ Scalaの型とDBの型が一致していない場合もcompileでエラーとな
 
 ---
 
-# SchemaSpy
-
 maven対応していない。。。
 
 しょうがないので、cloneしてゴニョゴニョして使ってたら
 
 ---
-
-# SchemaSpy
 
 つい最近maven対応しました！
 
@@ -352,6 +380,106 @@ https://github.com/schemaspy/schemaspy/issues/157
 
 https://central.sonatype.com/artifact/org.schemaspy/schemaspy/6.2.2
 
+---
+
+SchemaSpy自体は配布されているjarやDocker Imageを使用してコマンドベースでの処理を行い、
+内部でjdbcを使用してMeta情報など実際にDB接続を行ない取得を行なっている。
+
+SchemaSpyのカラムを情報を取得する処理
+
+```java
+private void initColumns(Table table) throws SQLException {
+  synchronized (Table.class) {
+    try (ResultSet rs = sqlService.getDatabaseMetaData().getColumns(table.getCatalog(), table.getSchema(), table.getName(), “%”)) {
+      while (rs.next())
+        addColumn(table, rs);
+    } catch (SQLException exc) {
+      if (!table.isLogical()) {
+        throw new ColumnInitializationFailure(table, exc);
+      }
+    }
+  }
+}
+```
+
+---
+
+ただ今回はDB接続を行うのではなく、アプリケーションで作成したテーブル定義やDB定義を使用してSchemaSpyのドキュメント生成を行う。
+
+SchemaSpyGeneratorというようなものを作成して、内部でSchemaSpyがResultSetなどから取得していた処理をこちらで定義したTableやColumnから必要な情報を抜き取るように改修
+
+---
+
+こんな感じのテーブル定義を使用してドキュメント生成してみる
+
+```scala
+val roleTable = Table[Role](“role”)(
+  column(“id”, BIGINT(64), AUTO_INCREMENT, PRIMARY_KEY),
+  column(“name”, VARCHAR(255)),
+  column(“status”, BIGINT(64))
+)
+
+val userTable = Table[User](“user”)(
+  column(“id”, BIGINT(64), “ユーザー識別子“, AUTO_INCREMENT, PRIMARY_KEY),
+  column(“name”, VARCHAR(255)),
+  column(“age”, INT(255).DEFAULT_NULL),
+  column(“role_id”, BIGINT(64)),
+  column(“updated_at”, TIMESTAMP.DEFAULT_CURRENT_TIMESTAMP()),
+  column(“created_at”, TIMESTAMP.DEFAULT_CURRENT_TIMESTAMP(true))
+)
+  .keySet(v =>
+    CONSTRAINT(“fk_id”, FOREIGN_KEY(v.roleId, REFERENCE(roleTable)(roleTable.id)))
+  )
+```
+
+---
+
+データベースと生成先を指定する
+
+```scala
+val db = new Database:
+  override val databaseType: Database.Type = Database.Type.MySQL
+  override val name: String = “example”
+  override val schema: String = “example”
+  override val tables = Set(roleTable, userTable)
+  ...
+
+val file = java.io.File(“./document”)
+SchemaSpyGenerator(db).generateTo(file)
+```
+
+---
+
+![h:700](https://user-images.githubusercontent.com/57429437/232967528-1231175f-9e68-48a2-a6f1-8497b0a5a447.png)
+
+
+---
+
+カラムの一覧
+
+![](https://user-images.githubusercontent.com/57429437/232969158-f65364fe-5749-4032-a18c-5d293a89a843.png)
+
+---
+
+外部キー制約
+
+![](https://user-images.githubusercontent.com/57429437/232969170-91ad1219-fc49-43ea-88e2-6c981d938404.png)
+
+---
+
+リレーションシップ
+
+![](https://user-images.githubusercontent.com/57429437/232969183-56641af6-61be-4a41-aefe-3d9421396843.png)
+
+---
+
+外部キーの設定に問題がある場合はエラーになる
+
+![w:800](https://user-images.githubusercontent.com/57429437/232969195-875c65e5-0922-4d46-aa27-3b2f6b0d7801.png)
+
+---
+
+まだまだ改善する余地が多数...
 
 ---
 
@@ -365,6 +493,8 @@ https://central.sonatype.com/artifact/org.schemaspy/schemaspy/6.2.2
 # 自作
 
 フィールド名でのアクセス時にResultSetからカラム名を指定してデータ取得を行うResultSetReaderというものを暗黙的に渡してあげる
+
+戻り値はEffect SystemでラップされたResultSetを使用するKleisli
 
 ```scala
 def applyDynamic[Tag <: Singleton](
@@ -402,7 +532,7 @@ given Kleisli[IO, ResultSet[IO], User] =
 
 # 自作
 
-StringContextなどでSQL文を生成して、DataSource -> Connection -> Statement -> ResultSetというようなJDBCの標準的なアクセスを行う (doobieのような感じ)
+文字列補完などでSQL文を生成して、DataSource -> Connection -> Statement -> ResultSetというようなJDBCの標準的なアクセスを行う (doobieのような感じ)
 
 ```scala
 val user: IO[User] = sql"SELECT * FROM user".query.transaction.run(dataSource)
