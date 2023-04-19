@@ -553,6 +553,235 @@ Scalaのコレクションを扱うようにデータベースを操作するこ
 
 # Slick
 
+SlickはモデルからTable定義を生成する
+
+```scala
+class UserTable(tag: Tag) extends Table[User](tag, "user"):
+  def id = column[Long]("id", O.AutoInc, O.Primary)
+  def name = column[String]("name")
+  def age = column[Option[Long]]("age")
+  def rorleId = column[Long]("role_id")
+  def updatedAt = column[Long]("updated_at")
+  def createdAt = column[Long]("created_at")
+
+  def * = (id, name, age, rorleId, updatedAt, createdAt).mapTo[User]
+```
+
+---
+
+DB接続はTableQueryとDatabaseを使用して行われる。
+
+
+```scala
+val tableQuery = TableQuery[UserTable]
+val db = Database.forDataSource(...)
+
+db.run(tableQuery.filter(_.name === "takapi").result)
+```
+
+---
+
+Slickでは、RepとTypedType[T]というものが存在しています。
+
+まず、RepはSlickがデータベーステーブルの列を表現するために使用する型です。Rep型は値を保持するためのものではなく、データベーステーブルの列に対応するSQL文を生成するために使用されます。
+
+```scala
+val id: Rep[Int] = column[Int]("id")
+val name: Rep[String] = column[String]("name")
+```
+
+これらのコードは、idとnameという2つの列を表し、それぞれの型はRep[Int]とRep[String]です。これらのRep型は、後に使用するクエリに対応するSQL文を生成するために使用されます。
+
+---
+
+次に、TypedType[T]は、Slickがカラムの型を表現するために使用する型です。Slickは、基本的な型（Int、String、Booleanなど）に加えて、自動生成されたユーザー定義の型や、さまざまなデータベースシステムでサポートされる型をサポートしています。TypedType[T]は、Slickがデータベースからデータを読み取るときに使用する型を指定するために使用されます。
+
+```scala
+val id: Rep[Int] = column[Int]("id")(summon[TypedType[Int]])
+val name: Rep[String] = column[String]("name")(summon[TypedType[String]])
+```
+
+このコードでは、summon[TypedType[Int]]とsummon[TypedType[String]]を使用して、それぞれの列の型を指定しています。これにより、Slickはデータベースからデータを読み取るときに、正しい型を使用することができます。
 
 
 ---
+
+つまりSlickで自作したテーブル定義を使用するためには、カラムをこのRepに持ち上げてあげる必要がありその際にTypedTypeも合わせて持たせてあげる必要があります。
+
+---
+
+これは先ほどと同じようにフィールド名でのアクセス時にTypedTypeを渡してあげて、新たにRepを生成してあげることにします。
+
+```scala
+extension [P <: Product](table: Table[P])
+  def applyDynamic[Tag <: Singleton](
+    tag: Tag
+  )()(using
+    mirror: Mirror.ProductOf[P],
+    index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]],
+    tt:     TypedType[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
+  ): Rep[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] =
+    val column = table.selectDynamic[Tag](tag)
+    new Rep.TypedRep[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]:
+      override def toNode =
+        Select(
+          (table.tag match
+            case r: RefTag => r.path
+            case _         => table.tableNode
+          ),
+          FieldSymbol(column.label)(Seq.empty, tt)
+        ) :@ tt
+
+      override def toString = (table.tag match
+        case r: RefTag => "(" + table.name + " " + r.path + ")"
+        case _         => table.name
+      ) + "." + column.label
+```
+
+---
+
+他にもSlickではScalaの型とデータベーステーブルの列の型をマッピングするためのShapeという機能が必要です。
+
+---
+
+TupleShapeでまずはカラムのリストからShapeのタプルを生成します。
+TupleShapeは、複数のShapeを結合して、タプルのShapeを表現するためのShapeです。
+
+```scala
+val tupleShape = new TupleShape[
+  FlatShapeLevel,
+  Tuple.Map[mirror.MirroredElemTypes, RepColumnType],
+  mirror.MirroredElemTypes,
+  P
+](
+  columns.productIterator
+    .map(v => {
+      RepShape[FlatShapeLevel, Rep[Extract[v.type]], Extract[v.type]]
+    })
+    .toList: _*
+)
+```
+
+ExtractはColumnの型パラメータを抽出する型レベル関数
+
+```scala
+type Extract[T] = T match
+  case Column[t] => t
+```
+---
+
+```scala
+val repColumns: Tuple.Map[mirror.MirroredElemTypes, RepColumnType] = Tuple
+  .fromArray(
+    columns.productIterator
+      .map(v => {
+        val column = v.asInstanceOf[TypedColumn[?]]
+        new TypedColumn[Extract[column.type]] with Rep[Extract[column.type]]:
+
+          ...
+          override def typedType = column.typedType
+
+          override def encodeRef(path: Node): Rep[Extract[column.type]] =
+            Rep.forNode(path)(using column.typedType)
+
+          override def toNode =
+            Select(
+              (tag match
+                case r: RefTag => r.path
+                case _         => tableNode
+              ),
+              FieldSymbol(label)(Seq.empty, typedType)
+            ) :@ typedType
+
+          override def toString = (tag match
+            case r: RefTag => "(" + name + " " + r.path + ")"
+            case _         => name
+          ) + "." + label
+      })
+      .toArray
+  )
+  .asInstanceOf[Tuple.Map[mirror.MirroredElemTypes, RepColumnType]]
+```
+
+---
+
+生成されたShapedValueとMirror、Tupleを使用してモデル <-> タプルの変換を定義してあげる。
+
+```scala
+  val shapedValue = new ShapedValue[Tuple.Map[mirror.MirroredElemTypes, RepColumnType], mirror.MirroredElemTypes](
+    repColumns,
+    tupleShape
+  )
+
+  shapedValue <> (
+    v => mirror.fromTuple(v.asInstanceOf[mirror.MirroredElemTypes]),
+    Tuple.fromProductTyped
+  )
+```
+
+---
+
+普段Slickを使用していてこんな複雑な処理を行わないのは、Slickがここら辺の変換を暗黙的に行うものを提供しているから
+
+https://github.com/slick/slick/blob/main/slick/src/main/scala/slick/lifted/ExtensionMethods.scala
+
+---
+
+自作したテーブル用のTableQueryを作成
+
+```scala
+class TableQuery[T <: Table[?]](table: T) extends Query[T, TableQuery.Extract[T], Seq]:
+
+  override lazy val shaped: ShapedValue[T, TableQuery.Extract[T]] =
+    ShapedValue(table, RepShape[FlatShapeLevel, T, TableQuery.Extract[T]])
+
+  override lazy val toNode = shaped.toNode
+
+object TableQuery:
+
+  type Extract[T] = T match
+    case Table[t] => t
+
+  def apply[T <: Table[?]](table: T): TableQuery[T] =
+    new TableQuery[T](table)
+```
+
+---
+
+
+Slickのテーブル定義を自作したものに置き換える
+
+```scala
+
+val table: Table[User] = Table[User]("user")(
+  column("id", BIGINT(64), AUTO_INCREMENT, PRIMARY_KEY),
+  column("name", VARCHAR(255)),
+  column("age", INT(255).DEFAULT_NULL),
+  column("updated_at", TIMESTAMP.DEFAULT_CURRENT_TIMESTAMP()),
+  column("created_at", TIMESTAMP.DEFAULT_CURRENT_TIMESTAMP(true))
+)
+
+val tableQuery = TableQuery(table)
+val db = Database.forDataSource(...)
+
+db.run(tableQuery.filter(_.name === "takapi").result)
+```
+
+---
+
+# 目指すもの
+
+- 型制御によってコンパイラで間違いを検出できる
+  => モデル -> テーブルの型制御, データタイプの型制御
+- テーブル定義からドキュメントを自動生成できる
+  => SchemaSpyのドキュメント生成
+- 実行するライブラリを選べるようにする
+  => 自作/Slick両方で動作可能
+
+---
+
+まだまだベースができたレベル...
+
+---
+
+おわり
