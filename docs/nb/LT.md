@@ -79,6 +79,11 @@ case class User(
 
 ---
 
+これら目指すものをScala3の機能を使って作ってみました。
+Scala2だとできないようなことがたくさんできたと思うので、そこら辺の紹介もできればなと思います。
+
+---
+
 # カラム定義
 
 カラムには型パラメーターを持たせる
@@ -134,16 +139,17 @@ https://speakerdeck.com/phenan/tuples-and-mirrors-in-scala3-and-higher-kinded-da
 
 # Dynamic
 
-ScalaのDynamicは、コードを書くときに変数やメソッドの型を宣言する必要がないという機能です。
-
-例えば、以下のようなコードがあったとします。
+ScalaのDynamicは、実行時に存在しないメソッドやプロパティにアクセスするための機能です。
 
 ```scala
-val x = 10
-val y = "Hello"
+foo.method("blah")      ~~> foo.applyDynamic("method")("blah")
+foo.method(x = "blah")  ~~> foo.applyDynamicNamed("method")(("x", "blah"))
+foo.method(x = 1, 2)    ~~> foo.applyDynamicNamed("method")(("x", 1), ("", 2))
+foo.field           ~~> foo.selectDynamic("field")
+foo.varia = 10      ~~> foo.updateDynamic("varia")(10)
+foo.arr(10) = 13    ~~> foo.selectDynamic("arr").update(10, 13)
+foo.arr(10)         ~~> foo.applyDynamic("arr")(10)
 ```
-
-この場合、変数xはInt型であり、変数yはString型です。しかし、Dynamicを使うと、型宣言を省略できます。
 
 ---
 
@@ -158,39 +164,18 @@ val myDynamic = new MyDynamic
 println(myDynamic.world) // "Hello, world!"
 ```
 
-この例では、MyDynamicクラスがDynamicトレイトを実装しています。selectDynamicメソッドをオーバーライドすることで、クラスに動的なメソッドを追加することができます。selectDynamicメソッドは、String型の引数を受け取り、String型の結果を返します。
-
----
-
-また、動的なオブジェクトに対してメソッドを呼び出すこともできます。
-
-```scala
-import scala.language.dynamics
-
-class MyDynamic extends Dynamic {
-  def applyDynamic(name: String)(args: Any*): String =
-    s"Calling method $name with arguments (${args.mkString(", ")})"
-}
-
-val myDynamic = new MyDynamic
-println(myDynamic.sayHello("Alice", "Bob"))
-// "Calling method sayHello with arguments (Alice, Bob)"
-
-```
-この例では、MyDynamicクラスがapplyDynamicメソッドをオーバーライドしています。applyDynamicメソッドは、String型のnameと、可変長引数のargsを受け取り、String型の結果を返します。
+この例では、MyDynamicクラスがDynamicトレイトをミックスインしています。selectDynamicメソッドをオーバーライドすることで、クラスに動的なメソッドを追加することができます。selectDynamicメソッドは、String型の引数を受け取り、String型の結果を返します。
 
 ---
 
 # テーブル
 
-テーブルはselectDynamicでフィールド名でカラム情報にアクセスできるようにしておく
+テーブルはselectDynamicでフィールド名でカラム情報にアクセスできるようにしておきます
 
 ```scala
 private[ldbc] trait Table[P <: Product] extends Dynamic:
   ...
-  def selectDynamic[Tag <: Singleton](
-    tag: Tag
-  )(using
+  def selectDynamic[Tag <: Singleton](tag: Tag)(using
     mirror: Mirror.ProductOf[P],
     index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
   ): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
@@ -198,6 +183,7 @@ private[ldbc] trait Table[P <: Product] extends Dynamic:
 
 ---
 
+フィールドへのアクセスはSingletonを使用します。
 Singleton型を使用することで、特定の値を持つ唯一の型を表すことができるようになる
 
 ```scala
@@ -252,31 +238,19 @@ object Table extends Dynamic:
 
 ---
 
-フィールド名でのアクセスを可能にするためにselectDynamicを実装する
-
-```scala
-    override def selectDynamic[Tag <: Singleton](
-      tag: Tag
-    )(using
-      mirror: Mirror.ProductOf[P],
-      index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
-    ): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] =
-      columns
-        .productElement(index.value)
-        .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
-```
-
----
-
 Tupleであるcolumnsから指定したIndexの値を取得する。
 productElementの戻り値はAnyなため、Tuple.Elemを使用してTupleのIndexに対応した型に変更してあげる
 
 Tuple.ElemはタプルXの位置Nにある要素の型を取得する型レベル関数
 
 ```scala
-columns
-  .productElement(index.value)
-  .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
+override def selectDynamic[Tag <: Singleton](tag: Tag)(using
+  mirror: Mirror.ProductOf[P],
+  index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
+): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] =
+  columns
+    .productElement(index.value)
+    .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
 ```
 
 ---
@@ -290,14 +264,8 @@ object Table extends Dynamic:
     mirror:    Mirror.ProductOf[P],
     converter: ColumnTupleConverter[mirror.MirroredElemTypes, Column]
   )(nameApply: "apply")(name: String)(columns: ColumnTuples[mirror.MirroredElemTypes, Column]): Table[P] =
-    fromTupleMap[P](name, ColumnTupleConverter.convert(columns))
+    Impl[P, mirror.MirroredElemTypes](name, ColumnTupleConverter.convert(columns), Seq.empty)
 
-  private def fromTupleMap[P <: Product](using
-    mirror: Mirror.ProductOf[P]
-  )(
-    _name:   String,
-    columns: Tuple.Map[mirror.MirroredElemTypes, Column]
-  ): Table[P] = Impl[P, mirror.MirroredElemTypes](_name, columns, Seq.empty)
 ```
 
 ---
@@ -406,7 +374,12 @@ private void initColumns(Table table) throws SQLException {
 
 ただ今回はDB接続を行うのではなく、アプリケーションで作成したテーブル定義やDB定義を使用してSchemaSpyのドキュメント生成を行う。
 
-SchemaSpyGeneratorというようなものを作成して、内部でSchemaSpyがResultSetなどから取得していた処理をこちらで定義したTableやColumnから必要な情報を抜き取るように改修
+---
+
+SchemaSpyはResultSetからTableやColumnのメタ情報など必要なデータ取得を行い、SchemaSpy内に定義されているモデルに格納をおこなっています。
+そのモデルを使用してドキュメント生成をおこなっているので、ResultSetから取得を行うのではなく自作したテーブル、カラムからデータを取得しSchemaSpyのモデルに変換してあげることで割と簡単に実装は出来ました。
+
+ただあまりScala3は関係ないので、実装は割愛
 
 ---
 
@@ -473,12 +446,6 @@ SchemaSpyGenerator(db).generateTo(file)
 
 ---
 
-外部キーの設定に問題がある場合はエラーになる
-
-![w:800](https://user-images.githubusercontent.com/57429437/232969195-875c65e5-0922-4d46-aa27-3b2f6b0d7801.png)
-
----
-
 まだまだ改善する余地が多数...
 
 ---
@@ -491,6 +458,13 @@ SchemaSpyGenerator(db).generateTo(file)
 ---
 
 # 自作
+
+
+文字列補完などでSQL文を生成して、DataSource -> Connection -> Statement -> ResultSetというようなJDBCの標準的なアクセスを行うdoobieのような感じで実装しました。
+
+---
+
+ResultSet -> モデルだけではなく指定したカラムだけ取得とかも行いたいので、テーブルのカラム全体ではなくカラム単体ごとにResultSetからデータを取得する処理を作成してあげる。
 
 フィールド名でのアクセス時にResultSetからカラム名を指定してデータ取得を行うResultSetReaderというものを暗黙的に渡してあげる
 
@@ -512,9 +486,41 @@ def applyDynamic[Tag <: Singleton](
 
 ---
 
-# 自作
+ResultSetReaderはこんなやつ。
+ResultSetからカラム名を指定して取得を行う処理を記載しておくこのとき取得する型は肩パラメーターによって決められるようにしておく。
 
-ResultSet -> Userへの変換を行うKleisliを定義してあげる
+```scala
+trait ResultSetReader[F[_], T]:
+
+  def read(resultSet: ResultSet[F], columnLabel: String): F[T]
+
+object ResultSetReader:
+
+  def apply[F[_], T](func: ResultSet[F] => String => F[T]): ResultSetReader[F, T] =
+    new ResultSetReader[F, T]:
+      override def read(resultSet: ResultSet[F], columnLabel: String): F[T] =
+        func(resultSet)(columnLabel)
+```
+
+---
+
+あとはScala標準の型とかは予め定義しておき暗黙的にわせるようにしておく。
+定義されていない型が必要になったら、同じように定義してあげれば良い。
+
+```scala
+given [F[_]]: ResultSetReader[F, String]  = ResultSetReader(_.getString)
+given [F[_]]: ResultSetReader[F, Boolean] = ResultSetReader(_.getBoolean)
+...
+```
+
+これでカラム単体でResultSetから値を取得できるKleisliを構築できるようになった
+```scala
+given Kleisli[IO, ResultSet[IO], Long] = table.id()
+```
+
+---
+
+あとはResultSet -> Userへの変換を行うKleisliを定義してあげる
 
 ```scala
 given Kleisli[IO, ResultSet[IO], User] =
@@ -529,10 +535,6 @@ given Kleisli[IO, ResultSet[IO], User] =
 ```
 
 ---
-
-# 自作
-
-文字列補完などでSQL文を生成して、DataSource -> Connection -> Statement -> ResultSetというようなJDBCの標準的なアクセスを行う (doobieのような感じ)
 
 ```scala
 val user: IO[User] = sql"SELECT * FROM user".query.transaction.run(dataSource)
@@ -613,10 +615,7 @@ val name: Rep[String] = column[String]("name")(summon[TypedType[String]])
 これは先ほどと同じようにフィールド名でのアクセス時にTypedTypeを渡してあげて、新たにRepを生成してあげることにします。
 
 ```scala
-extension [P <: Product](table: Table[P])
-  def applyDynamic[Tag <: Singleton](
-    tag: Tag
-  )()(using
+  def applyDynamic[Tag <: Singleton](tag: Tag)()(using
     mirror: Mirror.ProductOf[P],
     index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]],
     tt:     TypedType[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
@@ -642,10 +641,22 @@ extension [P <: Product](table: Table[P])
 
 他にもSlickではScalaの型とデータベーステーブルの列の型をマッピングするためのShapeという機能が必要です。
 
+SlickはRepをShapeに変換 -> ShapeをTupleに変換 -> その値を使用してTuple <-> モデルのマッピングを定義している。
+
+Slickはこの変換処理を暗黙におこなっている
+
+https://github.com/slick/slick/blob/main/slick/src/main/scala/slick/lifted/ExtensionMethods.scala
+
 ---
 
-TupleShapeでまずはカラムのリストからShapeのタプルを生成します。
+Slickのテーブル・カラム定義を使用しないので、この変換処理を定義してあげる必要がある。
+
+まずはカラム情報をRepに変換 -> Shapeに変換する処理を行う。
+
+---
+
 TupleShapeは、複数のShapeを結合して、タプルのShapeを表現するためのShapeです。
+TupleShapeでまずはカラムのリストからShapeのタプルを生成します。
 
 ```scala
 val tupleShape = new TupleShape[
@@ -718,12 +729,6 @@ val repColumns: Tuple.Map[mirror.MirroredElemTypes, RepColumnType] = Tuple
     Tuple.fromProductTyped
   )
 ```
-
----
-
-普段Slickを使用していてこんな複雑な処理を行わないのは、Slickがここら辺の変換を暗黙的に行うものを提供しているから
-
-https://github.com/slick/slick/blob/main/slick/src/main/scala/slick/lifted/ExtensionMethods.scala
 
 ---
 
