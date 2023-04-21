@@ -218,7 +218,7 @@ MirroredElemLabelsとTagが一致するIndexを生成し、ValueOfで値とし�
 override def selectDynamic[Tag <: Singleton](...)(
   ...
   index: ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]
-):
+): Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
 
 ...
 
@@ -253,7 +253,6 @@ object Table extends Dynamic:
 
 Tupleであるcolumnsから指定したIndexの値を取得する。
 productElementの戻り値はAnyなため、Tuple.Elemを使用してTupleのIndexに対応した型に変更してあげる
-
 Tuple.ElemはタプルXの位置Nにある要素の型を取得する型レベル関数
 
 ```scala
@@ -269,6 +268,8 @@ override def selectDynamic[Tag <: Singleton](tag: Tag)(using
 ---
 
 # インスタンス生成
+
+Tableはコンパニオンオブジェクトで、Implを実装している。
 
 ```scala
 
