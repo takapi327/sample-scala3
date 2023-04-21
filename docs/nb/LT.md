@@ -6,6 +6,18 @@ marp: true
 
 ---
 
+# 自己紹介
+
+名前: 富永 孝彦
+
+趣味で色々なもの作ってます。
+今回も趣味で作ったものの紹介です。
+
+https://github.com/takapi327
+https://twitter.com/takapi327
+
+---
+
 # tapirとは
 
 エンドポイントの記述とビジネスロジックを分離して記述できるScalaのライブラリ
@@ -80,7 +92,13 @@ case class User(
 ---
 
 これら目指すものをScala3の機能を使って作ってみました。
-Scala2だとできないようなことがたくさんできたと思うので、そこら辺の紹介もできればなと思います。
+Scala3で大きく変わったDataType generic programmingを使って行います。
+
+参考
+[DataType generic programming with scala3](https://y-yu.github.io/scalamatsuri2023/scalamatsuri2023.pdf)
+[Tuples and Mirrors in Scala3 and Higher-Kinded Data
+](https://speakerdeck.com/phenan/tuples-and-mirrors-in-scala3-and-higher-kinded-data)
+
 
 ---
 
@@ -123,17 +141,12 @@ inline def BIGINT[T <: Long](inline length: Int): Bigint[T] =
 
 # テーブル
 
-テーブル定義はDataType generic programmingを使って実装する
 - Tuple
 Tuple.Mapなどでタプルの各メンバの型 T を F[T] に変換する
 - Mirror
 モデルとタプルの相互変換を行う
 - Dynamic
 動的なメソッドを追加してカラム情報にアクセスできるようにする
-
-参考
-DataType generic programming with scala3 <- 直近のScala祭りの発表にあったが資料が見つけられず...
-https://speakerdeck.com/phenan/tuples-and-mirrors-in-scala3-and-higher-kinded-data
 
 ---
 
@@ -156,15 +169,15 @@ foo.arr(10)         ~~> foo.applyDynamic("arr")(10)
 ```scala
 import scala.language.dynamics
 
-class MyDynamic extends Dynamic {
+class MyDynamic extends Dynamic:
   def selectDynamic(name: String): String = s"Hello, $name!"
-}
 
 val myDynamic = new MyDynamic
 println(myDynamic.world) // "Hello, world!"
 ```
 
-この例では、MyDynamicクラスがDynamicトレイトをミックスインしています。selectDynamicメソッドをオーバーライドすることで、クラスに動的なメソッドを追加することができます。selectDynamicメソッドは、String型の引数を受け取り、String型の結果を返します。
+この例では、MyDynamicクラスがDynamicトレイトをミックスインしています。selectDynamicメソッドを実装することで、クラスに動的なメソッドを追加することができます。
+selectDynamicメソッドは、String型の引数を受け取り、String型の結果を返します。
 
 ---
 
@@ -228,9 +241,9 @@ Tableを継承したモデルを定義しておく
 object Table extends Dynamic:
 
   private case class Impl[P <: Product, T <: Tuple](
-    name:           String,
-    columns:        Tuple.Map[T, Column],
-    keyDefinitions: Seq[Key]
+    name:    String,
+    columns: Tuple.Map[T, Column],
+    ...
   ) extends Table[P]:
 
     ...
@@ -251,21 +264,6 @@ override def selectDynamic[Tag <: Singleton](tag: Tag)(using
   columns
     .productElement(index.value)
     .asInstanceOf[Column[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]]
-```
-
----
-
-```scala
-object Table extends Dynamic:
-
-  ...
-
-  def applyDynamic[P <: Product](using
-    mirror:    Mirror.ProductOf[P],
-    converter: ColumnTupleConverter[mirror.MirroredElemTypes, Column]
-  )(nameApply: "apply")(name: String)(columns: ColumnTuples[mirror.MirroredElemTypes, Column]): Table[P] =
-    Impl[P, mirror.MirroredElemTypes](name, ColumnTupleConverter.convert(columns), Seq.empty)
-
 ```
 
 ---
@@ -308,11 +306,11 @@ Scalaの型とDBの型が一致していない場合もcompileでエラーとな
 
 ---
 
-DataType generic programmingを使用してモデル -> テーブル定義を作成することができた。
+モデル -> テーブル定義を作成することができた。
 
-ここで重要な点は、このテーブル定義は何に使用されるかという情報を持っていないこと。
+作成されたテーブル定義は何に使用されるかという情報を持っていない。
 
-情報を持っていないため、別の何かで使用する時に関係のない情報が邪魔をしない。
+そのため、別の何かで使用する時に関係のない情報が邪魔をしない。
 使う側がこのテーブル定義に対して、意味を与えてあげる。
 
 ---
@@ -446,10 +444,6 @@ SchemaSpyGenerator(db).generateTo(file)
 
 ---
 
-まだまだ改善する余地が多数...
-
----
-
 # 実行するライブラリを選べるようにする
 
 - 自作
@@ -487,7 +481,7 @@ def applyDynamic[Tag <: Singleton](
 ---
 
 ResultSetReaderはこんなやつ。
-ResultSetからカラム名を指定して取得を行う処理を記載しておくこのとき取得する型は肩パラメーターによって決められるようにしておく。
+ResultSetからカラム名を指定して取得を行う処理を記載しておく、このとき取得する型はパラメーターによって決められるようにしておく。
 
 ```scala
 trait ResultSetReader[F[_], T]:
@@ -504,7 +498,7 @@ object ResultSetReader:
 
 ---
 
-あとはScala標準の型とかは予め定義しておき暗黙的にわせるようにしておく。
+あとはScala標準の型とかは予め定義しておき暗黙的に渡せるようにしておく。
 定義されていない型が必要になったら、同じように定義してあげれば良い。
 
 ```scala
@@ -535,6 +529,9 @@ given Kleisli[IO, ResultSet[IO], User] =
 ```
 
 ---
+
+- transaction => DataSource -> Connection
+- query => Connection -> Statement -> ResultSet 
 
 ```scala
 val user: IO[User] = sql"SELECT * FROM user".query.transaction.run(dataSource)
@@ -608,50 +605,34 @@ val name: Rep[String] = column[String]("name")(summon[TypedType[String]])
 
 ---
 
-つまりSlickで自作したテーブル定義を使用するためには、カラムをこのRepに持ち上げてあげる必要がありその際にTypedTypeも合わせて持たせてあげる必要があります。
-
----
-
-これは先ほどと同じようにフィールド名でのアクセス時にTypedTypeを渡してあげて、新たにRepを生成してあげることにします。
-
-```scala
-  def applyDynamic[Tag <: Singleton](tag: Tag)()(using
-    mirror: Mirror.ProductOf[P],
-    index:  ValueOf[Tuples.IndexOf[mirror.MirroredElemLabels, Tag]],
-    tt:     TypedType[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]
-  ): Rep[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]] =
-    val column = table.selectDynamic[Tag](tag)
-    new Rep.TypedRep[Tuple.Elem[mirror.MirroredElemTypes, Tuples.IndexOf[mirror.MirroredElemLabels, Tag]]]:
-      override def toNode =
-        Select(
-          (table.tag match
-            case r: RefTag => r.path
-            case _         => table.tableNode
-          ),
-          FieldSymbol(column.label)(Seq.empty, tt)
-        ) :@ tt
-
-      override def toString = (table.tag match
-        case r: RefTag => "(" + table.name + " " + r.path + ")"
-        case _         => table.name
-      ) + "." + column.label
-```
-
----
-
 他にもSlickではScalaの型とデータベーステーブルの列の型をマッピングするためのShapeという機能が必要です。
 
 SlickはRepをShapeに変換 -> ShapeをTupleに変換 -> その値を使用してTuple <-> モデルのマッピングを定義している。
 
-Slickはこの変換処理を暗黙におこなっている
+Slickはこの変換処理を暗黙におこなっています
 
 https://github.com/slick/slick/blob/main/slick/src/main/scala/slick/lifted/ExtensionMethods.scala
 
 ---
 
-Slickのテーブル・カラム定義を使用しないので、この変換処理を定義してあげる必要がある。
+Slickのテーブル定義の `*`を分解すると暗黙に変換が行われていることがわかります。
+ShapedValueは、Scalaの型とデータベーステーブルの列の値のタプルを表すものです。
 
-まずはカラム情報をRepに変換 -> Shapeに変換する処理を行う。
+```scala
+val shapedValue: ShapedValue[
+  (Rep[Option[Long]], Rep[String], Rep[Option[Int]]),
+  (Option[Long], String, Option[Int])
+] = (id, name, age)
+
+def * = shapedValue <> ((User.apply _).tupled, User.unapply)
+```
+
+---
+
+つまりSlickで自作したテーブル定義を使用するためには、カラムをこのRepに持ち上げてあげる必要があり、その際にTypedTypeも合わせて持たせてあげる必要があります。
+また指定したモデルへのマッピングを行うためにShapeも用意してあげる必要があります。
+
+まずはShapdeValueを作成するために、RepのShapeのTupleとRepのTupleをカラムから生成して渡してあげる必要があります。
 
 ---
 
@@ -672,14 +653,19 @@ val tupleShape = new TupleShape[
     .toList: _*
 )
 ```
+---
 
-ExtractはColumnの型パラメータを抽出する型レベル関数
+ここで型をColumn[T]からRep[T]にしてあげる必要があるので、Scala3で追加された型マッチを使用してColumnが持つTの型を抽出してあげます。
 
 ```scala
 type Extract[T] = T match
   case Column[t] => t
 ```
+
 ---
+
+次にカラムのTupleからRepのTupleを生成する
+単純に詰め替えを行う
 
 ```scala
 val repColumns: Tuple.Map[mirror.MirroredElemTypes, RepColumnType] = Tuple
@@ -690,7 +676,6 @@ val repColumns: Tuple.Map[mirror.MirroredElemTypes, RepColumnType] = Tuple
         new TypedColumn[Extract[column.type]] with Rep[Extract[column.type]]:
 
           ...
-          override def typedType = column.typedType
 
           override def encodeRef(path: Node): Rep[Extract[column.type]] =
             Rep.forNode(path)(using column.typedType)
@@ -703,11 +688,6 @@ val repColumns: Tuple.Map[mirror.MirroredElemTypes, RepColumnType] = Tuple
               ),
               FieldSymbol(label)(Seq.empty, typedType)
             ) :@ typedType
-
-          override def toString = (tag match
-            case r: RefTag => "(" + name + " " + r.path + ")"
-            case _         => name
-          ) + "." + label
       })
       .toArray
   )
@@ -754,7 +734,7 @@ object TableQuery:
 ---
 
 
-Slickのテーブル定義を自作したものに置き換える
+Slickで実行する準備ができたので、テーブル定義を自作したものに置き換える
 
 ```scala
 
@@ -785,7 +765,8 @@ db.run(tableQuery.filter(_.name === "takapi").result)
 
 ---
 
-まだまだベースができたレベル...
+Scala3のDataType generic programmingのおかげで型の受け渡しや変換を楽に行うことができました。
+他にもこんな使い方があるよ！などあれば教えていただけると嬉しいです。
 
 ---
 
