@@ -26,6 +26,37 @@ object User:
   enum Status(val code: Short):
     case Active extends Status(1)
 
+object Example extends App:
+  private val dataSource = new MysqlDataSource()
+  dataSource.setServerName("127.0.0.1")
+  dataSource.setPortNumber(13306)
+  //dataSource.setDatabaseName("ldbc_example")
+  dataSource.setUser("takapi327")
+  dataSource.setPassword("takapi327")
+
+  val conn = dataSource.getConnection
+  val meta = conn.getMetaData
+
+  //println(meta.getDatabaseProductName)
+  //println(meta.getDatabaseProductVersion)
+  //println(meta.getSQLKeywords)
+  //println(meta.getSystemFunctions)
+  //println(meta.getStringFunctions)
+  //println(meta.getNumericFunctions)
+  //println(meta.getTimeDateFunctions)
+  //println(meta.getIdentifierQuoteString)
+
+  val resultSet = meta.getColumns(null, null, "user", "%")
+
+  while (resultSet.next()) {
+    //println(resultSet.getString("COLUMN_NAME") + ": " + resultSet.getString("TYPE_NAME") + "=" + resultSet.getInt("COLUMN_SIZE"))
+    println(resultSet.getString("COLUMN_NAME") + ": " + resultSet.getString("COLUMN_DEF"))
+  }
+
+  resultSet.close()
+  conn.close()
+
+
 object Main extends IOApp:
 
   private val dataSource = new MysqlDataSource()
