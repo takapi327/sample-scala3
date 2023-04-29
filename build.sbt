@@ -133,6 +133,7 @@ lazy val ldbcExample = (project in file("app/ldbc-example"))
     ),
     libraryDependencies ++= Seq(
       "com.github.takapi327" %% "ldbc-dsl-io" % "0.1.0-SNAPSHOT",
+      "com.github.takapi327" %% "ldbc-schemaspy" % "0.1.0-SNAPSHOT",
       "mysql" % "mysql-connector-java" % "8.0.32"
     )
   )
