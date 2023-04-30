@@ -26,7 +26,7 @@ object User:
   enum Status(val code: Short):
     case Active extends Status(1)
 
-object Example extends App:
+object JdbcExample extends App:
   private val dataSource = new MysqlDataSource()
   dataSource.setServerName("127.0.0.1")
   dataSource.setPortNumber(13306)
