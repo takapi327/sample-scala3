@@ -65,5 +65,5 @@ object Example extends App:
     override val tables = Set(roleTable, userTable)
 
   val file = java.io.File("document")
-  SchemaSpyGenerator(db).generateTo(file)
-  //SchemaSpyGenerator(db).connectGenerateTo("takapi327", "takapi327", file)
+  SchemaSpyGenerator.default(db, file).generate()
+  //SchemaSpyGenerator.connect(db, "takapi327", Some("takapi327"), file).generate()
