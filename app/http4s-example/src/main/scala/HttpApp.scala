@@ -15,25 +15,14 @@ import org.http4s.ember.server.EmberServerBuilder
 object HttpApp extends ResourceApp.Forever:
 
   private val routes: HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case req@GET -> Root / "login" =>
-      println("======================")
-      println(req.attributes.isEmpty)
-      println(req.attributes.empty.isEmpty)
-      println(req.attributes.m)
-      println(req.attributes.m(req.attributes.m.keys.head).a)
-      println(req.attributes.lookup(Key.newKey[SyncIO, Unique.Token].unsafeRunSync()))
-      println(req.attributes.lookup(Message.Keys.TrailerHeaders[IO]))
-      println(req.attributes.lookup(ServerRequestKeys.SecureSession))
-      println(req.attributes.lookup(Request.Keys.ConnectionInfo))
-      println(req.cookies.map(_.name))
-      println("======================")
-      Ok("")
+    case GET -> Root / "healthcheck" => Ok("Healthcheck Ok")
+    case GET -> Root => Ok("Hello World!")
   }
 
   override def run(args: List[String]): Resource[IO, Unit] =
     for
       _ <- EmberServerBuilder.default[IO]
-        .withPort(port"5555")
+        .withPort(port"9000")
         .withHttpApp(routes.orNotFound)
         .build
     yield ()
