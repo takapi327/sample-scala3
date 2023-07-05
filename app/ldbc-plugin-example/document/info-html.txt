@@ -1,5 +1,0 @@
-date=
-os=
-schemaspy-version=
-schemaspy-build=
-renderer=

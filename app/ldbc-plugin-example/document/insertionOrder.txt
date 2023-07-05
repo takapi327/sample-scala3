@@ -1,8 +1,0 @@
-sub_test
-test
-auto_inc_test
-country
-country_test
-mysql_column_test
-person
-user
