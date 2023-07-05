@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><database name="ldbc_example" schema="ldbc_example" type="MySQL - 5.7.39">
+   <tables>
+      <table name="auto_inc_test" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="0" type="BIGINT(64)" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="phone" nullable="false" remarks="" size="0" type="VARCHAR(255)" typeCode="12"/>
+         <index name="id" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+      </table>
+      <table name="country" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="code" nullable="false" remarks="" size="0" type="CHAR(3)" typeCode="1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="0" type="TEXT" typeCode="-1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="population" nullable="false" remarks="" size="0" type="INT(11)" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="3" name="gnp" nullable="true" remarks="" size="0" type="DECIMAL(10, 2)" typeCode="3"/>
+      </table>
+      <table name="country_test" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="識別子" size="0" type="TINYINT(255)" typeCode="-6"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="code" nullable="false" remarks="" size="0" type="CHAR(3)" typeCode="1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="name" nullable="false" remarks="name" size="0" type="VARCHAR(255)" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="population" nullable="false" remarks="" size="0" type="INT(11)" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="4" name="gnp" nullable="true" remarks="" size="0" type="FLOAT(10)" typeCode="6"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="auto_inc_id" nullable="false" remarks="" size="0" type="BIGINT(64)" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="6" name="updated_at" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="7" name="created_at" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="id" sequenceNumberInPK="2"/>
+         <primaryKey column="id" sequenceNumberInPK="3"/>
+         <primaryKey column="id" sequenceNumberInPK="4"/>
+         <primaryKey column="id" sequenceNumberInPK="5"/>
+         <primaryKey column="id" sequenceNumberInPK="6"/>
+         <primaryKey column="id" sequenceNumberInPK="7"/>
+         <primaryKey column="id" sequenceNumberInPK="8"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+      </table>
+      <table name="mysql_column_test" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="0" name="binary" nullable="true" remarks="" size="0" type="BINARY(0)" typeCode="-2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tinyblob" nullable="true" remarks="" size="0" type="TINYBLOB" typeCode="-3"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="text" nullable="true" remarks="" size="0" type="TEXT" typeCode="-1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="blob" nullable="true" remarks="" size="0" type="LONGBLOB" typeCode="-4"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="4" name="decimal" nullable="true" remarks="" size="0" type="DECIMAL(65, 6)" typeCode="3"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="5" name="float" nullable="true" remarks="" size="0" type="FLOAT(10)" typeCode="6"/>
+      </table>
+      <table name="person" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="0" type="BIGINT(20)" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="0" type="VARCHAR(255)" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="2" name="age" nullable="true" remarks="" size="0" type="SMALLINT(6)" typeCode="5"/>
+         <index name="id" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="name" unique="true">
+            <column ascending="false" name="name"/>
+         </index>
+      </table>
+      <table name="sub_test" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="0" type="BIGINT(64)" typeCode="-5">
+            <child column="sub_id" foreignKey="fk_id" implied="false" onDeleteCascade="false" schema="ldbc_example" table="test"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="category" nullable="false" remarks="" size="0" type="TINYINT(64)" typeCode="-6">
+            <child column="sub_category" foreignKey="fk_id" implied="false" onDeleteCascade="false" schema="ldbc_example" table="test"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="category" sequenceNumberInPK="2"/>
+         <primaryKey column="id" sequenceNumberInPK="3"/>
+         <primaryKey column="category" sequenceNumberInPK="4"/>
+         <index name="PRIMARY" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+      </table>
+      <table name="test" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="0" type="BIGINT(64)" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="sub_id" nullable="false" remarks="" size="0" type="BIGINT(64)" typeCode="-5">
+            <parent column="id" foreignKey="fk_id" implied="false" onDeleteCascade="false" schema="ldbc_example" table="sub_test"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="sub_category" nullable="false" remarks="" size="0" type="TINYINT(64)" typeCode="-6">
+            <parent column="category" foreignKey="fk_id" implied="false" onDeleteCascade="false" schema="ldbc_example" table="sub_test"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="p2" nullable="false" remarks="" size="0" type="CHAR(3)" typeCode="1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="p3" nullable="true" remarks="" size="0" type="INT(10)" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="p4" nullable="true" remarks="" size="0" type="CHAR(1)" typeCode="1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="p5" nullable="false" remarks="" size="0" type="VARCHAR(255)" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="p6" nullable="true" remarks="" size="0" type="BINARY(255)" typeCode="-2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="p7" nullable="false" remarks="" size="0" type="VARBINARY(255)" typeCode="-3"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="p8" nullable="true" remarks="" size="0" type="TINYBLOB" typeCode="-3"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="p9" nullable="false" remarks="" size="0" type="TINYTEXT" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="p10" nullable="true" remarks="" size="0" type="BLOB" typeCode="2004"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="p11" nullable="true" remarks="" size="0" type="TEXT" typeCode="-1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="p12" nullable="false" remarks="" size="0" type="TINYBLOB" typeCode="-3"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="p13" nullable="false" remarks="" size="0" type="MEDIUMTEXT" typeCode="-1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="p14" nullable="true" remarks="" size="0" type="LONGBLOB" typeCode="-4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="p15" nullable="true" remarks="" size="0" type="LONGTEXT" typeCode="-1"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="p16" nullable="true" remarks="" size="0" type="DATE" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="p17" nullable="true" remarks="" size="0" type="DATETIME" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="19" name="p18" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="20" name="p19" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="p20" nullable="false" remarks="" size="0" type="TIME" typeCode="92"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="22" name="p21" nullable="false" remarks="" size="0" type="YEAR" typeCode="91"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="id" sequenceNumberInPK="2"/>
+         <primaryKey column="id" sequenceNumberInPK="3"/>
+         <primaryKey column="id" sequenceNumberInPK="4"/>
+         <primaryKey column="id" sequenceNumberInPK="5"/>
+         <primaryKey column="id" sequenceNumberInPK="6"/>
+         <primaryKey column="id" sequenceNumberInPK="7"/>
+         <primaryKey column="id" sequenceNumberInPK="8"/>
+         <primaryKey column="id" sequenceNumberInPK="9"/>
+         <primaryKey column="id" sequenceNumberInPK="10"/>
+         <primaryKey column="id" sequenceNumberInPK="11"/>
+         <primaryKey column="id" sequenceNumberInPK="12"/>
+         <primaryKey column="id" sequenceNumberInPK="13"/>
+         <primaryKey column="id" sequenceNumberInPK="14"/>
+         <primaryKey column="id" sequenceNumberInPK="15"/>
+         <primaryKey column="id" sequenceNumberInPK="16"/>
+         <primaryKey column="id" sequenceNumberInPK="17"/>
+         <primaryKey column="id" sequenceNumberInPK="18"/>
+         <primaryKey column="id" sequenceNumberInPK="19"/>
+         <primaryKey column="id" sequenceNumberInPK="20"/>
+         <primaryKey column="id" sequenceNumberInPK="21"/>
+         <primaryKey column="id" sequenceNumberInPK="22"/>
+         <primaryKey column="id" sequenceNumberInPK="23"/>
+         <index name="id" unique="false">
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="PRIMARY" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="sub_id" unique="false">
+            <column ascending="false" name="sub_id"/>
+         </index>
+      </table>
+      <table name="user" numRows="0" remarks="" schema="ldbc_example" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="0" type="BIGINT(20)" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="1" name="name" nullable="true" remarks="" size="0" type="VARCHAR(255)" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="NULL" digits="0" id="2" name="age" nullable="true" remarks="" size="0" type="FLOAT(24)" typeCode="6"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="status" nullable="false" remarks="" size="0" type="SMALLINT(255)" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="4" name="updated_at" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="0" id="5" name="created_at" nullable="false" remarks="" size="0" type="TIMESTAMP" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <primaryKey column="id" sequenceNumberInPK="2"/>
+         <primaryKey column="id" sequenceNumberInPK="3"/>
+         <primaryKey column="id" sequenceNumberInPK="4"/>
+         <primaryKey column="id" sequenceNumberInPK="5"/>
+         <primaryKey column="id" sequenceNumberInPK="6"/>
+         <index name="id" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="index_age" unique="false">
+            <column ascending="false" name="age"/>
+         </index>
+         <index name="index_name" unique="false">
+            <column ascending="false" name="name"/>
+         </index>
+         <index name="key_id" unique="false">
+            <column ascending="false" name="id"/>
+         </index>
+         <index name="PRIMARY" unique="true">
+            <column ascending="false" name="id"/>
+         </index>
+      </table>
+   </tables>
+</database>
